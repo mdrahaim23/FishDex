@@ -473,7 +473,7 @@
       linear-gradient(180deg, #fbf3df 0%, var(--paper) 50%, #ecdeb4 100%);
     background-size: 80px 80px, 110px 110px, 140px 140px, 100% 100%;
     border-radius: 14px;
-    padding: 26px 28px 180px;
+    padding: 26px 28px 220px;
     margin: -10px -4px 0;
     color: var(--ink);
     box-shadow:
@@ -796,9 +796,9 @@
   }
   .card.r-legendary.uncaught {
     background:
-      /* dark mystery body — wrapped as gradient for reliable clip behavior */
-      linear-gradient(rgba(20, 40, 60, 0.55), rgba(20, 40, 60, 0.55)) padding-box,
-      /* chromatic ring stays */
+      /* dark mystery body — opaque so the chromatic ring doesn't bleed through */
+      linear-gradient(#15403d, #15403d) padding-box,
+      /* chromatic ring stays — only the border carries the legendary feel */
       linear-gradient(135deg,
         #fbcfe8 0%,
         #eef2ff 35%,
@@ -921,7 +921,7 @@
     align-items: center;
     gap: 14px;
     width: 100%;
-    margin-top: 110px;
+    margin-top: 150px;
     padding: 14px 18px;
     background: linear-gradient(180deg, #1f1f1f 0%, #0a0a0a 100%);
     border: 2px dashed rgba(255, 255, 255, 0.25);
