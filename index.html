@@ -365,7 +365,7 @@
   .bubble-btn.salt,
   .bubble-btn.newfish,
   .bubble-btn.log,
-  .bubble-btn.themes {
+  .bubble-btn.shop {
     background: linear-gradient(180deg, #fbfaf2 0%, #d8d4c0 100%);
     color: #1f2a26;
     box-shadow:
@@ -376,7 +376,7 @@
   .bubble-btn.salt .sub,
   .bubble-btn.newfish .sub,
   .bubble-btn.log .sub,
-  .bubble-btn.themes .sub {
+  .bubble-btn.shop .sub {
     color: #4a5550;
   }
 
@@ -683,6 +683,23 @@
     justify-content: flex-start;
     overflow-y: auto;
     padding: 10px 9px;
+  }
+
+  /* FLAT CARDS — no 3D context. Used on the New Fish screen where cards never
+     flip. Without this, iOS Safari (especially iPad) lazy-decodes images into
+     pre-allocated GPU layers and they fail to composite until a forced repaint
+     (modal open/close), so fish appear blank until tapped. */
+  .card.flat,
+  .card.flat .card-inner {
+    transform-style: flat;
+    -webkit-transform-style: flat;
+    perspective: none;
+  }
+  .card.flat .card-face {
+    transform: none;
+    -webkit-transform: none;
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
   }
   .card-back .field {
     margin-bottom: 5px;
@@ -1143,8 +1160,8 @@
     text-transform: uppercase;
   }
 
-  /* === themes / THEME PICKER === */
-  .themes-intro {
+  /* === SHOP / THEME PICKER === */
+  .shop-intro {
     color: rgba(240, 255, 248, 0.75);
     font-size: 13px;
     letter-spacing: 0.5px;
@@ -1546,7 +1563,7 @@ function render() {
   else if (view === 'collection') app.innerHTML = renderCollection();
   else if (view === 'newfish') app.innerHTML = renderNewFish();
   else if (view === 'log') app.innerHTML = renderLog();
-  else if (view === 'themes') app.innerHTML = renderthemes();
+  else if (view === 'shop') app.innerHTML = renderShop();
   bindEvents();
 }
 
@@ -1569,9 +1586,9 @@ function renderHome() {
           CATCH LOG
           <span class="sub">${log.length} ENTRIES</span>
         </button>
-        <button class="bubble-btn themes" data-nav="themes">
-          themes
-          <span class="sub">CUSTOMIZE</span>
+        <button class="bubble-btn shop" data-nav="shop">
+          SHOP
+          <span class="sub">THEMES</span>
         </button>
       </div>
       <div class="footer-cred">Made by Matthew Rahaim</div>
@@ -1655,10 +1672,10 @@ function renderNewFish() {
       <p class="newfish-hint">Tap the fish you reeled in 🎣</p>
       <div class="grid dense">
         ${FISH.map(f => `
-          <div class="card r-${f.rarity}" data-fish="${f.id}" data-action="open-modal">
+          <div class="card flat r-${f.rarity}" data-fish="${f.id}" data-action="open-modal">
             <div class="card-inner">
               <div class="card-face card-front">
-                <div class="card-img-wrap"><img class="card-img pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}"></div>
+                <div class="card-img-wrap"><img class="card-img pixel" decoding="async" src="${f.img}" alt="${f.name}"></div>
                 <div class="card-name">${f.name}</div>
               </div>
             </div>
@@ -1704,13 +1721,13 @@ function renderLog() {
   return html;
 }
 
-function renderthemes() {
+function renderShop() {
   return `
     <div class="scr-header">
-      <div class="scr-title">themes</div>
+      <div class="scr-title">SHOP</div>
       <button class="back-btn" data-nav="home">←</button>
     </div>
-    <div class="themes-intro">Pick a theme. More to come.</div>
+    <div class="shop-intro">Pick a theme. More to come.</div>
     <div class="theme-grid">
       ${THEMES.map(t => {
         const selected = t.id === currentTheme;
