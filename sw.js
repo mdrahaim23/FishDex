@@ -2,18 +2,25 @@
 // To force users onto a new build: bump CACHE_VERSION below.
 // On activate, old caches are deleted automatically.
 
-const CACHE_VERSION = 'fishdex-v9';
+const CACHE_VERSION = 'fishdex-v10';
 
 // Fish sprites — kept as a list so it's clear what gets precached. If you add
 // new fish to the FISH array in index.html, add the new id here too (or rely
 // on the runtime cache fallback in the fetch handler — same-origin GETs get
 // cached on first successful fetch).
 const FISH_IDS = [
-  'catfish', 'baitfish',
-  'ladyfish', 'speckledtrout', 'silverperch', 'pufferfish',
-  'sandseatrout', 'sheepshead', 'mangrovesnapper', 'whiting', 'spanishmackerel', 'flounder',
-  'redfish', 'snook', 'blackdrum', 'pompano',
-  'shark', 'tarpon'
+  // Common
+  'baitfish', 'catfish',
+  // Uncommon
+  'ladyfish', 'silver_perch', 'pufferfish', 'speckled_seatrout', 'needlefish',
+  // Rare
+  'weakfish', 'whiting', 'sheepshead', 'mangrove_snapper',
+  // Epic
+  'spanish_mackerel', 'flounder', 'black_drum', 'jack_crevalle',
+  // Legendary
+  'redfish', 'snook', 'pompano', 'barracuda', 'shark', 'bonito',
+  // Champion
+  'tarpon', 'goliath_grouper', 'gag_grouper', 'red_snapper',
 ];
 
 const PRECACHE = [
@@ -30,7 +37,7 @@ const PRECACHE = [
   'icon-120.png',
   'favicon-32.png',
   'favicon-16.png',
-  ...FISH_IDS.map(id => `fish/${id}.png`)
+  ...FISH_IDS.map(id => `fish/${id}.webp`)
 ];
 
 // Install: precache the app shell + all fish sprites so the app works fully
