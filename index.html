@@ -831,6 +831,94 @@
   }
   .card.r-champion.uncaught::after { display: none; }
 
+  /* === UNLISTED — pseudo-rarity for field catches not yet in the dex === */
+  .rarity-header.unlisted {
+    background: linear-gradient(90deg, #0a0a0a 0%, #2a2a2a 100%);
+    color: #f0f0f0;
+    border: 1px solid #444;
+    text-shadow: 1px 1px 0 #000;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .card.r-unlisted {
+    border: 3px solid #1a1a1a;
+    background: linear-gradient(180deg, #1f1f1f 0%, #0a0a0a 100%);
+    box-shadow: 0 4px 0 #000, inset 0 0 0 1px rgba(255,255,255,0.05);
+  }
+  .card.r-unlisted .card-name {
+    background: rgba(20, 20, 20, 0.85);
+    color: #f0f0f0;
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .card.r-unlisted .card-back {
+    color: #f0f0f0;
+  }
+  .card.r-unlisted .card-back .field {
+    background: rgba(40, 40, 40, 0.85);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .card.r-unlisted .card-back .label {
+    color: #999;
+  }
+  .card.r-unlisted .unlisted-hint {
+    font-style: italic;
+    color: #aaa;
+    font-size: 10px;
+  }
+  .unlisted-silhouette {
+    width: 70%;
+    max-width: 110px;
+    height: auto;
+    fill: rgba(255, 255, 255, 0.12);
+    stroke: rgba(255, 255, 255, 0.35);
+    stroke-width: 1;
+  }
+
+  /* Button on the New Fish screen for logging an unlisted catch */
+  .unlisted-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    margin-top: 18px;
+    padding: 14px 18px;
+    background: linear-gradient(180deg, #1f1f1f 0%, #0a0a0a 100%);
+    border: 2px dashed rgba(255, 255, 255, 0.25);
+    border-radius: 14px;
+    color: #f0f0f0;
+    font-family: 'Bungee', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.1s, border-color 0.15s;
+    box-shadow: 0 4px 0 #000;
+  }
+  .unlisted-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #000;
+  }
+  .unlisted-btn-plus {
+    font-size: 28px;
+    line-height: 1;
+    color: rgba(255,255,255,0.7);
+    font-family: inherit;
+    flex-shrink: 0;
+  }
+  .unlisted-btn-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    line-height: 1.2;
+  }
+  .unlisted-btn-sub {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(240, 240, 240, 0.55);
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
   .new-badge {
     position: absolute;
     top: -10px;
@@ -941,6 +1029,11 @@
   .rarity-tag.champion  {
     background: linear-gradient(90deg, var(--r-champion-3), var(--r-champion-4), var(--r-champion-2));
     color: #3a2208;
+  }
+  .rarity-tag.unlisted {
+    background: linear-gradient(90deg, #1a1a1a, #2a2a2a);
+    color: #f0f0f0;
+    border: 1px solid #444;
   }
 
   .field-block { margin-bottom: 14px; }
@@ -1077,6 +1170,23 @@
   .log-entry.r-epic      { border-color: var(--r-epic-deep); }
   .log-entry.r-legendary { border-color: var(--r-legendary-deep); }
   .log-entry.r-champion  { border-color: var(--r-champion-3); }
+  .log-entry.r-unlisted  { border-color: #1a1a1a; }
+  .log-unlisted-icon {
+    width: 64px; height: 64px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #1f1f1f 0%, #0a0a0a 100%);
+    border-radius: 8px;
+    border: 1px solid #2a2a2a;
+  }
+  .log-unlisted-icon svg {
+    width: 80%; height: auto;
+    fill: rgba(255, 255, 255, 0.12);
+    stroke: rgba(255, 255, 255, 0.35);
+    stroke-width: 1;
+  }
   .log-entry img {
     width: 64px; height: 64px;
     object-fit: contain;
@@ -1333,10 +1443,21 @@ const FISH = [
 ];
 
 const RARITIES = ['common','uncommon','rare','epic','legendary','champion'];
+// 'unlisted' is a pseudo-rarity — used only for state.unlisted entries (catches
+// of fish not yet in the FISH array). Renders as its own section in Collection,
+// styled distinctly from the graded tiers. Not iterated like real rarities.
 const RARITY_LABEL = {
   common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic',
-  legendary: 'Legendary', champion: 'Champion'
+  legendary: 'Legendary', champion: 'Champion', unlisted: 'Unlisted'
 };
+
+// Normalize a free-text fish name for use as a key. Lowercase, trim, collapse
+// internal whitespace. "  Wa  Hoo " → "wa hoo". Used so that "Wahoo", "wahoo",
+// and "WAHOO " all collapse onto the same Unlisted card, AND so that adding a
+// real fish later can auto-match by name regardless of how the user typed it.
+function normalizeName(s) {
+  return (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+}
 
 const STATE_KEY = 'fishdex:state:v2';
 const LOG_KEY = 'fishdex:log:v2';
@@ -1365,7 +1486,7 @@ const THEMES = [
   { id: 'beach',   name: 'Beach',         blurb: 'Sandy shallows, sunny dunes.',        price: 0 },
 ];
 
-let state = { catches: {} };
+let state = { catches: {}, unlisted: {} };
 let log = [];
 let view = 'home';
 let modalFishId = null;
@@ -1422,7 +1543,10 @@ async function loadState() {
       } catch(_) {}
     }
     if (s) state = JSON.parse(s);
-  } catch(e) { state = { catches: {} }; }
+  } catch(e) { state = { catches: {}, unlisted: {} }; }
+  // Ensure state.unlisted exists for users who saved before this feature shipped
+  if (!state.unlisted) state.unlisted = {};
+  if (!state.catches) state.catches = {};
   try {
     let l = localStorage.getItem(LOG_KEY);
     if (!l && typeof window.storage !== 'undefined' && window.storage?.get) {
@@ -1439,7 +1563,63 @@ async function loadState() {
     if (t && THEMES.some(x => x.id === t)) currentTheme = t;
   } catch(_) {}
   applyTheme(currentTheme);
+
+  // After loading: check if any Unlisted names now match a real fish in the
+  // FISH array (e.g. a new fish was added since the user last opened the app).
+  // If so, promote those catches into the real fish entry and drop the Unlisted
+  // record. Saves silently; render() will pick up the new state.
+  const promoted = await promoteUnlistedMatches();
+  if (promoted.length) {
+    // Stash for the next render to surface as a toast
+    pendingPromotionToast = promoted;
+  }
 }
+
+// Build a name→fishId index of real fish (normalized name → real fish id) so
+// we can detect when an Unlisted catch matches a newly-added real fish.
+function realFishByName() {
+  const m = {};
+  for (const f of FISH) m[normalizeName(f.name)] = f.id;
+  return m;
+}
+
+// For each Unlisted entry whose normalized name matches a real fish, move all
+// of its log entries to the real fish id, copy the most recent catch into
+// state.catches, and delete the Unlisted record. Returns the list of promoted
+// real-fish display names so the caller can toast about it.
+async function promoteUnlistedMatches() {
+  if (!state.unlisted) return [];
+  const realByName = realFishByName();
+  const promotedNames = [];
+  let anyChange = false;
+  for (const normName of Object.keys(state.unlisted)) {
+    const realId = realByName[normName];
+    if (!realId) continue; // no match yet, leave as Unlisted
+    // Rewrite log entries from "unlisted:<normName>" to the real id
+    const oldFishId = 'unlisted:' + normName;
+    let touchedLog = false;
+    for (let i = 0; i < log.length; i++) {
+      if (log[i].fishId === oldFishId) {
+        log[i] = { ...log[i], fishId: realId };
+        touchedLog = true;
+      }
+    }
+    // Remove from state.unlisted, real fish entry will be rebuilt by reconcile
+    promotedNames.push(FISH.find(f => f.id === realId)?.name || normName);
+    delete state.unlisted[normName];
+    anyChange = true;
+    if (touchedLog) {
+      // Mark recently-caught so the user gets a NEW! badge on the now-graded fish
+      recentlyCaught.add(realId);
+    }
+  }
+  if (anyChange) {
+    reconcileCollection();
+    await Promise.all([saveState(), saveLog()]);
+  }
+  return promotedNames;
+}
+let pendingPromotionToast = null;
 async function saveState() {
   try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
   catch(e) { console.error('save state failed', e); }
@@ -1499,7 +1679,11 @@ function reconcileCollection() {
   // Build map of fish -> most recent remaining log entry.
   // Date wins; on date tie, later id (= later creation timestamp) wins so that
   // the genuinely most-recently-logged entry is reflected on the collection card.
+  // Also: track per-unlisted-name display name + count (unlisted entries' fishId
+  // looks like "unlisted:wahoo"; we store stats keyed by the normalized name).
   const latest = {};
+  const unlistedCounts = {};   // normName -> count of log entries
+  const unlistedDisplay = {};  // normName -> last-seen display name (capitalization)
   for (const entry of log) {
     const cur = latest[entry.fishId];
     if (!cur
@@ -1507,8 +1691,17 @@ function reconcileCollection() {
         || (entry.date === cur.date && entry.id > cur.id)) {
       latest[entry.fishId] = entry;
     }
+    if (entry.fishId.startsWith('unlisted:')) {
+      const norm = entry.fishId.slice('unlisted:'.length);
+      unlistedCounts[norm] = (unlistedCounts[norm] || 0) + 1;
+      // Use the display name from the entry if it was preserved, otherwise
+      // fall back to the previous record (entries created before this update
+      // didn't store unlistedName). Title-case the normalized form as last resort.
+      if (entry.unlistedName) unlistedDisplay[norm] = entry.unlistedName;
+      else if (!unlistedDisplay[norm]) unlistedDisplay[norm] = norm.replace(/\b\w/g, c => c.toUpperCase());
+    }
   }
-  // For each fish currently in state.catches, either update to latest or remove
+  // Reconcile state.catches (real fish only — keys never start with "unlisted:")
   for (const fishId of Object.keys(state.catches)) {
     if (latest[fishId]) {
       state.catches[fishId] = {
@@ -1521,8 +1714,9 @@ function reconcileCollection() {
       recentlyCaught.delete(fishId);
     }
   }
-  // Also ensure newly-logged fish that aren't yet in state.catches get added
+  // Add real-fish entries from log that aren't yet in state.catches
   for (const fishId of Object.keys(latest)) {
+    if (fishId.startsWith('unlisted:')) continue;
     if (!state.catches[fishId]) {
       state.catches[fishId] = {
         date: latest[fishId].date,
@@ -1530,6 +1724,19 @@ function reconcileCollection() {
         notes: latest[fishId].notes
       };
     }
+  }
+  // Rebuild state.unlisted entirely from the log (single source of truth).
+  // If a name has zero log entries, it's gone.
+  state.unlisted = {};
+  for (const norm of Object.keys(unlistedCounts)) {
+    const e = latest['unlisted:' + norm];
+    state.unlisted[norm] = {
+      name: unlistedDisplay[norm],
+      count: unlistedCounts[norm],
+      date: e.date,
+      location: e.location,
+      notes: e.notes,
+    };
   }
 }
 
@@ -1592,7 +1799,7 @@ function renderHome() {
   return `
     <div class="home-wrap">
       <div class="logo">FISHDEX</div>
-      <div class="logo-sub">FLORIDA SALTWATER EDITION</div>
+      <div class="logo-sub">A FISHING JOURNAL</div>
       <div class="home-buttons">
         <button class="bubble-btn newfish" data-nav="newfish">
           NEW FISH!
@@ -1643,7 +1850,50 @@ function renderCollection() {
       </div>
     `;
   }
+  // Unlisted section — only renders if there's at least one entry. Hidden until
+  // discovered. Each Unlisted name gets its own card, mirrors the real-fish layout.
+  const unlistedKeys = Object.keys(state.unlisted || {});
+  if (unlistedKeys.length) {
+    html += `
+      <div class="rarity-section">
+        <div class="rarity-header unlisted">
+          <span>${RARITY_LABEL.unlisted}</span>
+          <span class="count">${unlistedKeys.length}</span>
+        </div>
+        <div class="grid">
+          ${unlistedKeys.map(k => renderUnlistedCard(k, state.unlisted[k])).join('')}
+        </div>
+      </div>
+    `;
+  }
   return html;
+}
+
+// Render a single Unlisted fish card — black, no shimmer, generic silhouette.
+// Flips like a real card to show date/location/notes on the back.
+function renderUnlistedCard(normName, entry) {
+  const n = entry.count || 1;
+  return `
+    <div class="card r-unlisted" data-unlisted="${escapeHtml(normName)}" data-action="flip-unlisted">
+      ${n >= 2 ? `<div class="count-badge">×${n}</div>` : ''}
+      <div class="card-inner">
+        <div class="card-face card-front">
+          <div class="card-img-wrap">
+            <svg class="unlisted-silhouette" viewBox="0 0 64 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M4 16 Q12 4 28 8 Q44 12 52 12 L60 4 L60 28 L52 20 Q44 20 28 24 Q12 28 4 16 Z M44 14 a2 2 0 1 1 0.01 0 Z"/>
+            </svg>
+          </div>
+          <div class="card-name">${escapeHtml(entry.name)}</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="field"><div class="label">Caught</div><div class="val">${fmtDate(entry.date)}</div></div>
+          <div class="field"><div class="label">Where</div><div class="val">${escapeHtml(entry.location || '—')}</div></div>
+          ${entry.notes ? `<div class="field"><div class="label">Notes</div><div class="val">${escapeHtml(entry.notes)}</div></div>` : ''}
+          <div class="field"><div class="label">Caught ${n}×</div><div class="val unlisted-hint">Awaiting field guide entry.</div></div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderCard(f) {
@@ -1705,6 +1955,13 @@ function renderNewFish() {
           </div>
         `).join('')}
       </div>
+      <button class="unlisted-btn" data-action="open-unlisted-modal">
+        <span class="unlisted-btn-plus">+</span>
+        <span class="unlisted-btn-text">
+          DON'T SEE YOUR CATCH?
+          <span class="unlisted-btn-sub">Log it as unlisted</span>
+        </span>
+      </button>
     </div>
   `;
 }
@@ -1722,6 +1979,33 @@ function renderLog() {
   }
   const sorted = [...log].sort((a, b) => (b.date + b.id).localeCompare(a.date + a.id));
   html += sorted.map(entry => {
+    // Unlisted entries don't have a FISH array record; render them with the
+    // generic silhouette and the user-supplied display name.
+    if (entry.fishId.startsWith('unlisted:')) {
+      const norm = entry.fishId.slice('unlisted:'.length);
+      const displayName = entry.unlistedName
+        || (state.unlisted[norm] && state.unlisted[norm].name)
+        || norm.replace(/\b\w/g, c => c.toUpperCase());
+      return `
+        <div class="log-entry r-unlisted">
+          <div class="log-unlisted-icon">
+            <svg viewBox="0 0 64 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M4 16 Q12 4 28 8 Q44 12 52 12 L60 4 L60 28 L52 20 Q44 20 28 24 Q12 28 4 16 Z M44 14 a2 2 0 1 1 0.01 0 Z"/>
+            </svg>
+          </div>
+          <div class="meta">
+            <h3>${escapeHtml(displayName)}</h3>
+            <div class="when">${fmtDate(entry.date)} · Unlisted</div>
+            ${entry.location ? `<div class="where">${escapeHtml(entry.location)}</div>` : ''}
+            ${entry.notes ? `<div class="notes">"${escapeHtml(entry.notes)}"</div>` : ''}
+          </div>
+          <div class="actions">
+            <button class="edit" data-edit="${entry.id}" title="Edit">✎</button>
+            <button class="del" data-del="${entry.id}" data-fishname="${escapeHtml(displayName)}" title="Delete">✕</button>
+          </div>
+        </div>
+      `;
+    }
     const f = FISH.find(x => x.id === entry.fishId);
     if (!f) return '';
     return `
@@ -1776,19 +2060,39 @@ function renderShop() {
 function renderEditModal(entryId) {
   const entry = log.find(x => x.id === entryId);
   if (!entry) return;
-  const f = FISH.find(x => x.id === entry.fishId);
-  if (!f) return;
+  const isUnlisted = entry.fishId.startsWith('unlisted:');
+  const f = isUnlisted ? null : FISH.find(x => x.id === entry.fishId);
+  if (!isUnlisted && !f) return;
+
+  // Display name + visual chrome differs for unlisted vs real
+  const displayName = isUnlisted
+    ? (entry.unlistedName || entry.fishId.slice('unlisted:'.length).replace(/\b\w/g, c => c.toUpperCase()))
+    : f.name;
+  const headerHtml = isUnlisted
+    ? `<svg class="unlisted-silhouette" style="margin: 6px auto 0; display: block;" viewBox="0 0 64 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+         <path d="M4 16 Q12 4 28 8 Q44 12 52 12 L60 4 L60 28 L52 20 Q44 20 28 24 Q12 28 4 16 Z M44 14 a2 2 0 1 1 0.01 0 Z"/>
+       </svg>
+       <h2>${escapeHtml(displayName)}</h2>
+       <div class="rarity-tag unlisted">Field Notes</div>`
+    : `<img class="pixel" decoding="async" src="${f.img}" alt="${f.name}">
+       <h2>${f.name}</h2>
+       <div class="rarity-tag ${f.rarity}">${RARITY_LABEL[f.rarity]}</div>`;
+
   const wrapper = document.createElement('div');
   wrapper.className = 'modal-bg';
   wrapper.innerHTML = `
     <div class="modal" data-stop="1">
       <div class="modal-grip"></div>
       <div class="modal-fish">
-        <img class="pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}">
-        <h2>${f.name}</h2>
-        <div class="rarity-tag ${f.rarity}">${RARITY_LABEL[f.rarity]}</div>
+        ${headerHtml}
       </div>
       <div class="prev-catch">Editing this catch entry.</div>
+      ${isUnlisted ? `
+        <div class="field-block">
+          <label>Fish name</label>
+          <input type="text" id="e-name" maxlength="40" autocomplete="off" value="${escapeHtml(displayName)}">
+        </div>
+      ` : ''}
       <div class="field-block">
         <label>Date</label>
         <input type="date" id="e-date" value="${entry.date}">
@@ -1811,12 +2115,25 @@ function renderEditModal(entryId) {
     const date = wrapper.querySelector('#e-date').value || todayISO();
     const location = wrapper.querySelector('#e-loc').value.trim();
     const notes = wrapper.querySelector('#e-notes').value.trim();
-    // Update the log entry in place
     const idx = log.findIndex(x => x.id === entryId);
     if (idx >= 0) {
-      log[idx] = { ...log[idx], date, location, notes };
+      if (isUnlisted) {
+        // Allow renaming an unlisted catch. If renamed to a name matching an
+        // existing real fish, re-target the entry to that real fish.
+        const newName = (wrapper.querySelector('#e-name').value || '').trim() || displayName;
+        const norm = normalizeName(newName);
+        const realByName = realFishByName();
+        const realId = realByName[norm];
+        log[idx] = {
+          ...log[idx],
+          date, location, notes,
+          fishId: realId || ('unlisted:' + norm),
+          unlistedName: realId ? undefined : newName,
+        };
+      } else {
+        log[idx] = { ...log[idx], date, location, notes };
+      }
     }
-    // Reconcile so state.catches reflects the most recent entry per fish
     reconcileCollection();
     await Promise.all([saveLog(), saveState()]);
     wrapper.remove();
@@ -1891,6 +2208,82 @@ function renderModal() {
   document.body.appendChild(wrapper);
 }
 
+// Modal for logging a catch that isn't in the FISH array. User types the name,
+// it gets normalized for grouping but the original capitalization is preserved
+// for display. If the name happens to match a real fish, we redirect into the
+// regular catch flow so they don't accidentally make an Unlisted entry that
+// the migration will immediately swallow.
+function renderUnlistedModal() {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'modal-bg';
+  wrapper.innerHTML = `
+    <div class="modal" data-stop="1">
+      <div class="modal-grip"></div>
+      <div class="modal-fish">
+        <svg class="unlisted-silhouette" style="margin: 6px auto 0; display: block;" viewBox="0 0 64 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M4 16 Q12 4 28 8 Q44 12 52 12 L60 4 L60 28 L52 20 Q44 20 28 24 Q12 28 4 16 Z M44 14 a2 2 0 1 1 0.01 0 Z"/>
+        </svg>
+        <h2>UNLISTED CATCH</h2>
+        <div class="rarity-tag unlisted">Field Notes</div>
+      </div>
+      <div class="prev-catch">
+        Log a fish that's not in the dex yet. If it gets added later, your catches move into its entry automatically.
+      </div>
+      <div class="field-block">
+        <label>Fish name</label>
+        <input type="text" id="u-name" placeholder="e.g. Wahoo" maxlength="40" autocomplete="off">
+      </div>
+      <div class="field-block">
+        <label>Date</label>
+        <input type="date" id="u-date" value="${todayISO()}">
+      </div>
+      <div class="field-block">
+        <label>Location</label>
+        <input type="text" id="u-loc" placeholder="e.g. Tampa Bay" value="">
+      </div>
+      <div class="field-block">
+        <label>Notes</label>
+        <textarea id="u-notes" placeholder="Bait used, weather, size, who you were with..."></textarea>
+      </div>
+      <button class="save-btn" id="u-save">SAVE CATCH</button>
+    </div>
+  `;
+  wrapper.addEventListener('click', e => {
+    if (!e.target.closest('[data-stop]')) wrapper.remove();
+  });
+  wrapper.querySelector('#u-save').addEventListener('click', async () => {
+    const rawName = wrapper.querySelector('#u-name').value.trim();
+    if (!rawName) {
+      wrapper.querySelector('#u-name').focus();
+      return;
+    }
+    const norm = normalizeName(rawName);
+    const date = wrapper.querySelector('#u-date').value || todayISO();
+    const location = wrapper.querySelector('#u-loc').value.trim();
+    const notes = wrapper.querySelector('#u-notes').value.trim();
+
+    // If the name matches a real fish, route to the real id (the user just
+    // typed the name of a fish that IS in the dex — don't create an Unlisted).
+    const realByName = realFishByName();
+    const realId = realByName[norm];
+
+    log.push({
+      id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      fishId: realId || ('unlisted:' + norm),
+      unlistedName: realId ? undefined : rawName,
+      date, location, notes
+    });
+    reconcileCollection();
+    if (realId) recentlyCaught.add(realId);
+    await Promise.all([saveState(), saveLog()]);
+    wrapper.remove();
+    toast(realId ? `${rawName} logged! 🎣` : `Unlisted ${rawName} logged 🎣`);
+    view = 'collection';
+    render();
+  });
+  document.body.appendChild(wrapper);
+}
+
 function bindEvents() {
   document.querySelectorAll('[data-nav]').forEach(el => {
     el.addEventListener('click', () => {
@@ -1901,7 +2294,7 @@ function bindEvents() {
       window.scrollTo(0, 0);
     });
   });
-  document.querySelectorAll('[data-action="flip"]').forEach(el => {
+  document.querySelectorAll('[data-action="flip"], [data-action="flip-unlisted"]').forEach(el => {
     el.addEventListener('click', () => {
       if (flippedCard && flippedCard !== el) flippedCard.classList.remove('flipped');
       el.classList.toggle('flipped');
@@ -1919,6 +2312,11 @@ function bindEvents() {
     el.addEventListener('click', () => {
       modalFishId = el.dataset.fish;
       renderModal();
+    });
+  });
+  document.querySelectorAll('[data-action="open-unlisted-modal"]').forEach(el => {
+    el.addEventListener('click', () => {
+      renderUnlistedModal();
     });
   });
   document.querySelectorAll('[data-edit]').forEach(el => {
@@ -1999,6 +2397,14 @@ function bindEvents() {
 (async () => {
   await loadState();
   render();
+  if (pendingPromotionToast && pendingPromotionToast.length) {
+    const names = pendingPromotionToast;
+    pendingPromotionToast = null;
+    const msg = names.length === 1
+      ? `Moved your ${names[0]} catches into the dex 🎣`
+      : `Moved ${names.length} sets of catches into the dex 🎣`;
+    setTimeout(() => toast(msg), 600);
+  }
 })();
 </script>
 
