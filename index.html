@@ -1552,7 +1552,7 @@ function renderCard(f) {
         ${n >= 2 ? `<div class="count-badge">×${n}</div>` : ''}
         <div class="card-inner">
           <div class="card-face card-front">
-            <div class="card-img-wrap"><img class="card-img pixel" decoding="async" src="${f.img}" alt="${f.name}"></div>
+            <div class="card-img-wrap"><img class="card-img pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}"></div>
             <div class="card-name">${f.name}</div>
           </div>
           <div class="card-face card-back">
@@ -1568,7 +1568,7 @@ function renderCard(f) {
     <div class="${cls}" data-fish="${f.id}" data-action="shake">
       <div class="card-inner">
         <div class="card-face card-front">
-          <div class="card-img-wrap"><img class="card-img pixel" decoding="async" src="${f.img}" alt="???"></div>
+          <div class="card-img-wrap"><img class="card-img pixel" loading="lazy" decoding="async" src="${f.img}" alt="???"></div>
           <div class="card-name">???</div>
         </div>
       </div>
@@ -1580,7 +1580,7 @@ function renderNewFish() {
   return `
     <div class="book-page">
       <div class="scr-header">
-        <div class="scr-title">NICE CATCH!</div>
+        <div class="scr-title">CONGRATS ON CATCH!</div>
         <button class="back-btn" data-nav="home">←</button>
       </div>
       <p class="newfish-hint">Tap the fish you reeled in 🎣</p>
@@ -1589,7 +1589,7 @@ function renderNewFish() {
           <div class="card r-${f.rarity}" data-fish="${f.id}" data-action="open-modal">
             <div class="card-inner">
               <div class="card-face card-front">
-                <div class="card-img-wrap"><img class="card-img pixel" decoding="async" src="${f.img}" alt="${f.name}"></div>
+                <div class="card-img-wrap"><img class="card-img pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}"></div>
                 <div class="card-name">${f.name}</div>
               </div>
             </div>
@@ -1617,7 +1617,7 @@ function renderLog() {
     if (!f) return '';
     return `
       <div class="log-entry r-${f.rarity}">
-        <img class="pixel" decoding="async" src="${f.img}" alt="${f.name}">
+        <img class="pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}">
         <div class="meta">
           <h3>${f.name}</h3>
           <div class="when">${fmtDate(entry.date)}</div>
@@ -1675,7 +1675,7 @@ function renderEditModal(entryId) {
     <div class="modal" data-stop="1">
       <div class="modal-grip"></div>
       <div class="modal-fish">
-        <img class="pixel" decoding="async" src="${f.img}" alt="${f.name}">
+        <img class="pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}">
         <h2>${f.name}</h2>
         <div class="rarity-tag ${f.rarity}">${RARITY_LABEL[f.rarity]}</div>
       </div>
@@ -1727,7 +1727,7 @@ function renderModal() {
     <div class="modal" data-stop="1">
       <div class="modal-grip"></div>
       <div class="modal-fish">
-        <img class="pixel" decoding="async" src="${f.img}" alt="${f.name}">
+        <img class="pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}">
         <h2>${f.name}</h2>
         <div class="rarity-tag ${f.rarity}">${RARITY_LABEL[f.rarity]}</div>
       </div>
