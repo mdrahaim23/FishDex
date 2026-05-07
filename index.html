@@ -1573,9 +1573,17 @@ function render() {
 // stay blank until something forces a repaint (like opening a modal). Calling
 // img.decode() on each one explicitly tells Safari to decode now, bypassing the
 // stalled queue. Failures are silently ignored — already-decoded images just resolve.
+//
+// Collection cards that flip ([data-action="flip"]) start in .flat mode (no 3D
+// compositing) so the image can decode without GPU layer overhead, then upgrade
+// to 3D-capable once the image is ready. Other cards stay flat permanently.
 function forceDecodeImages() {
   document.querySelectorAll('#app img').forEach(img => {
-    if (img.decode) img.decode().catch(() => {});
+    if (!img.decode) return;
+    img.decode().then(() => {
+      const card = img.closest('.card.flat[data-action="flip"]');
+      if (card) card.classList.remove('flat');
+    }).catch(() => {});
   });
 }
 
@@ -1641,7 +1649,10 @@ function renderCollection() {
 function renderCard(f) {
   const caught = caughtFor(f.id);
   const isNew = recentlyCaught.has(f.id);
-  const cls = `card r-${f.rarity} ${caught ? '' : 'uncaught'}`;
+  // Start every card with .flat — disables 3D compositing until the image is
+  // decoded. After decode, forceDecodeImages() removes .flat so flipping works.
+  // Without this, iPad Safari stalls compositing the back face for minutes.
+  const cls = `card flat r-${f.rarity} ${caught ? '' : 'uncaught'}`;
   if (caught) {
     const n = countFor(f.id);
     return `
@@ -1650,7 +1661,7 @@ function renderCard(f) {
         ${n >= 2 ? `<div class="count-badge">×${n}</div>` : ''}
         <div class="card-inner">
           <div class="card-face card-front">
-            <div class="card-img-wrap"><img class="card-img pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}"></div>
+            <div class="card-img-wrap"><img class="card-img pixel" decoding="async" src="${f.img}" alt="${f.name}"></div>
             <div class="card-name">${f.name}</div>
           </div>
           <div class="card-face card-back">
@@ -1666,7 +1677,7 @@ function renderCard(f) {
     <div class="${cls}" data-fish="${f.id}" data-action="shake">
       <div class="card-inner">
         <div class="card-face card-front">
-          <div class="card-img-wrap"><img class="card-img pixel" loading="lazy" decoding="async" src="${f.img}" alt="???"></div>
+          <div class="card-img-wrap"><img class="card-img pixel" decoding="async" src="${f.img}" alt="???"></div>
           <div class="card-name">???</div>
         </div>
       </div>
