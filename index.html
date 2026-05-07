@@ -365,7 +365,7 @@
   .bubble-btn.salt,
   .bubble-btn.newfish,
   .bubble-btn.log,
-  .bubble-btn.shop {
+  .bubble-btn.themes {
     background: linear-gradient(180deg, #fbfaf2 0%, #d8d4c0 100%);
     color: #1f2a26;
     box-shadow:
@@ -376,7 +376,7 @@
   .bubble-btn.salt .sub,
   .bubble-btn.newfish .sub,
   .bubble-btn.log .sub,
-  .bubble-btn.shop .sub {
+  .bubble-btn.themes .sub {
     color: #4a5550;
   }
 
@@ -1143,8 +1143,8 @@
     text-transform: uppercase;
   }
 
-  /* === SHOP / THEME PICKER === */
-  .shop-intro {
+  /* === themes / THEME PICKER === */
+  .themes-intro {
     color: rgba(240, 255, 248, 0.75);
     font-size: 13px;
     letter-spacing: 0.5px;
@@ -1546,7 +1546,7 @@ function render() {
   else if (view === 'collection') app.innerHTML = renderCollection();
   else if (view === 'newfish') app.innerHTML = renderNewFish();
   else if (view === 'log') app.innerHTML = renderLog();
-  else if (view === 'shop') app.innerHTML = renderShop();
+  else if (view === 'themes') app.innerHTML = renderthemes();
   bindEvents();
 }
 
@@ -1569,8 +1569,8 @@ function renderHome() {
           CATCH LOG
           <span class="sub">${log.length} ENTRIES</span>
         </button>
-        <button class="bubble-btn shop" data-nav="shop">
-          SHOP
+        <button class="bubble-btn themes" data-nav="themes">
+          themes
           <span class="sub">THEMES</span>
         </button>
       </div>
@@ -1704,13 +1704,13 @@ function renderLog() {
   return html;
 }
 
-function renderShop() {
+function renderthemes() {
   return `
     <div class="scr-header">
-      <div class="scr-title">SHOP</div>
+      <div class="scr-title">themes</div>
       <button class="back-btn" data-nav="home">←</button>
     </div>
-    <div class="shop-intro">Pick a theme. More to come.</div>
+    <div class="themes-intro">Pick a theme. More to come.</div>
     <div class="theme-grid">
       ${THEMES.map(t => {
         const selected = t.id === currentTheme;
