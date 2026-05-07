@@ -796,9 +796,9 @@
   }
   .card.r-legendary.uncaught {
     background:
-      /* dark mystery body */
-      rgba(20, 40, 60, 0.55) padding-box,
-      /* chromatic ring stays — desaturated slightly so it reads "locked" */
+      /* dark mystery body — wrapped as gradient for reliable clip behavior */
+      linear-gradient(rgba(20, 40, 60, 0.55), rgba(20, 40, 60, 0.55)) padding-box,
+      /* chromatic ring stays */
       linear-gradient(135deg,
         #fbcfe8 0%,
         #eef2ff 35%,
@@ -906,11 +906,12 @@
     font-size: 10px;
   }
   /* Bonito sprite reused as the placeholder image for unlisted catches.
-     Desaturated + dimmed so it visually reads as "this is a placeholder,
-     not the actual species you caught." Doubled selector for specificity —
-     beats `.modal-fish img` which would otherwise override the filter. */
+     `brightness(0)` crushes all pixel colors to pure black, leaving only the
+     alpha channel — so it renders as a flat black silhouette regardless of
+     the bonito's actual colors. Reads as "generic fish shape" not "specific species".
+     Doubled selector for specificity — beats `.modal-fish img`. */
   .unlisted-placeholder.unlisted-placeholder {
-    filter: grayscale(100%) brightness(0.55) contrast(1.1) drop-shadow(2px 2px 0 rgba(0,0,0,0.3));
+    filter: brightness(0) drop-shadow(2px 2px 0 rgba(0,0,0,0.25));
     opacity: 0.85;
   }
 
