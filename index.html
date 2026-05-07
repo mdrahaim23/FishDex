@@ -473,7 +473,7 @@
       linear-gradient(180deg, #fbf3df 0%, var(--paper) 50%, #ecdeb4 100%);
     background-size: 80px 80px, 110px 110px, 140px 140px, 100% 100%;
     border-radius: 14px;
-    padding: 26px 28px 160px;
+    padding: 26px 28px 180px;
     margin: -10px -4px 0;
     color: var(--ink);
     box-shadow:
@@ -759,26 +759,34 @@
   .card.r-epic      { border-color: var(--r-epic); box-shadow: 0 4px 0 var(--r-epic-deep); }
 
   /* LEGENDARY CARD — soft holographic with conic shimmer (no banding).
-     Border uses a pink→white→blue gradient via border-image so it reads as
-     chromatic rather than purple. Drop shadow uses a desaturated cool blue
-     instead of purple so the legendary "feel" is icy/holographic, not regal. */
+     Uses the double-background-clip trick: one gradient clipped to padding-box
+     paints the card body; another gradient clipped to border-box paints the
+     border ring. Unlike border-image, this respects border-radius cleanly so
+     the chromatic edge is properly rounded. The body gradient is slightly
+     deepened from the previous version + an inner shadow adds contrast so
+     the fish image pops against the holo background. */
   .card.r-legendary {
     border: 3px solid transparent;
-    border-image: linear-gradient(135deg,
-      var(--r-legendary-1) 0%,
-      var(--r-legendary-2) 50%,
-      var(--r-legendary-3) 100%) 1;
     background:
+      /* card body — pastel holo with deeper saturation */
       linear-gradient(135deg,
-        rgba(251, 207, 232, 0.45) 0%,
-        rgba(255, 255, 255, 0.85) 35%,
-        rgba(186, 230, 253, 0.55) 70%,
-        rgba(251, 207, 232, 0.45) 100%);
-    background-size: 300% 300%;
+        rgba(244, 168, 213, 0.55) 0%,
+        rgba(255, 255, 255, 0.92) 35%,
+        rgba(147, 197, 253, 0.65) 70%,
+        rgba(244, 168, 213, 0.55) 100%) padding-box,
+      /* gradient ring — saturated pink → white → blue, rotates with body */
+      linear-gradient(135deg,
+        #f9a8d4 0%,
+        #e0e7ff 35%,
+        #93c5fd 70%,
+        #f9a8d4 100%) border-box;
+    background-size: 300% 300%, 100% 100%;
     animation: holoShift 6s ease-in-out infinite;
     box-shadow:
       0 4px 0 #93c5fd,
-      0 0 14px rgba(186, 230, 253, 0.55);
+      0 0 16px rgba(147, 197, 253, 0.55),
+      inset 0 0 24px rgba(244, 168, 213, 0.18),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.4);
     position: relative;
   }
   @keyframes holoShift {
@@ -893,8 +901,9 @@
   }
   /* Bonito sprite reused as the placeholder image for unlisted catches.
      Desaturated + dimmed so it visually reads as "this is a placeholder,
-     not the actual species you caught." */
-  .unlisted-placeholder {
+     not the actual species you caught." Doubled selector for specificity —
+     beats `.modal-fish img` which would otherwise override the filter. */
+  .unlisted-placeholder.unlisted-placeholder {
     filter: grayscale(100%) brightness(0.55) contrast(1.1) drop-shadow(2px 2px 0 rgba(0,0,0,0.3));
     opacity: 0.85;
   }
@@ -905,7 +914,7 @@
     align-items: center;
     gap: 14px;
     width: 100%;
-    margin-top: 48px;
+    margin-top: 80px;
     padding: 14px 18px;
     background: linear-gradient(180deg, #1f1f1f 0%, #0a0a0a 100%);
     border: 2px dashed rgba(255, 255, 255, 0.25);
@@ -1810,7 +1819,7 @@ function renderHome() {
   return `
     <div class="home-wrap">
       <div class="logo">FISHDEX</div>
-      <div class="logo-sub">FLORIDA SALTWATER EDITION</div>
+      <div class="logo-sub">A FISHING JOURNAL</div>
       <div class="home-buttons">
         <button class="bubble-btn newfish" data-nav="newfish">
           NEW FISH!
