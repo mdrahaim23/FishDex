@@ -72,9 +72,6 @@
     --r-common: #7dd3fc;
     --r-common-deep: #0284c7;
 
-    --r-uncommon: #86efac;
-    --r-uncommon-deep: #15803d;
-
     --r-rare: #fb923c;
     --r-rare-deep: #c2410c;
 
@@ -568,7 +565,6 @@
     overflow: hidden;
   }
   .rarity-header.common    { background: linear-gradient(90deg, var(--r-common-deep), var(--r-common)); color: #fff; }
-  .rarity-header.uncommon  { background: linear-gradient(90deg, var(--r-uncommon-deep), var(--r-uncommon)); color: #fff; }
   .rarity-header.rare      { background: linear-gradient(90deg, var(--r-rare-deep), var(--r-rare)); color: #fff; }
   .rarity-header.epic      { background: linear-gradient(90deg, var(--r-epic-deep), var(--r-epic)); color: #fff; }
 
@@ -737,7 +733,6 @@
   }
 
   .card.r-common    { border-color: var(--r-common); box-shadow: 0 4px 0 var(--r-common-deep); }
-  .card.r-uncommon  { border-color: var(--r-uncommon); box-shadow: 0 4px 0 var(--r-uncommon-deep); }
   .card.r-rare      { border-color: var(--r-rare); box-shadow: 0 4px 0 var(--r-rare-deep); }
   .card.r-epic      { border-color: var(--r-epic); box-shadow: 0 4px 0 var(--r-epic-deep); }
 
@@ -914,7 +909,6 @@
     color: #fff;
   }
   .rarity-tag.common    { background: var(--r-common-deep); }
-  .rarity-tag.uncommon  { background: var(--r-uncommon-deep); }
   .rarity-tag.rare      { background: var(--r-rare-deep); }
   .rarity-tag.epic      { background: var(--r-epic-deep); }
   .rarity-tag.legendary {
@@ -1281,62 +1275,34 @@
 <div id="app"></div>
 
 <script type="module">
-const FISH = [
-  // Common (2)
-  {id:"baitfish",         name:"Baitfish",          rarity:"common",    img:"fish/baitfish.webp"},
-  {id:"catfish",          name:"Catfish",           rarity:"common",    img:"fish/catfish.webp"},
-  // Uncommon (5)
-  {id:"ladyfish",         name:"Ladyfish",          rarity:"uncommon",  img:"fish/ladyfish.webp"},
-  {id:"silver_perch",     name:"Silver Perch",      rarity:"uncommon",  img:"fish/silver_perch.webp"},
-  {id:"pufferfish",       name:"Pufferfish",        rarity:"uncommon",  img:"fish/pufferfish.webp"},
-  {id:"speckled_seatrout",name:"Speckled Seatrout", rarity:"uncommon",  img:"fish/speckled_seatrout.webp"},
-  {id:"needlefish",       name:"Needlefish",        rarity:"uncommon",  img:"fish/needlefish.webp"},
-  // Rare (4)
-  {id:"weakfish",         name:"Weakfish",          rarity:"rare",      img:"fish/weakfish.webp"},
-  {id:"whiting",          name:"Whiting",           rarity:"rare",      img:"fish/whiting.webp"},
-  {id:"sheepshead",       name:"Sheepshead",        rarity:"rare",      img:"fish/sheepshead.webp"},
-  {id:"mangrove_snapper", name:"Mangrove Snapper",  rarity:"rare",      img:"fish/mangrove_snapper.webp"},
-  // Epic (4)
-  {id:"spanish_mackerel", name:"Spanish Mackerel",  rarity:"epic",      img:"fish/spanish_mackerel.webp"},
-  {id:"flounder",         name:"Flounder",          rarity:"epic",      img:"fish/flounder.webp"},
-  {id:"black_drum",       name:"Black Drum",        rarity:"epic",      img:"fish/black_drum.webp"},
-  {id:"jack_crevalle",    name:"Jack Crevalle",     rarity:"epic",      img:"fish/jack_crevalle.webp"},
-  // Legendary (6)
-  {id:"redfish",          name:"Redfish",           rarity:"legendary", img:"fish/redfish.webp"},
-  {id:"snook",            name:"Snook",             rarity:"legendary", img:"fish/snook.webp"},
-  {id:"pompano",          name:"Pompano",           rarity:"legendary", img:"fish/pompano.webp"},
-  {id:"barracuda",        name:"Barracuda",         rarity:"legendary", img:"fish/barracuda.webp"},
-  {id:"shark",            name:"Shark",             rarity:"legendary", img:"fish/shark.webp"},
-  {id:"bonito",           name:"Bonito",            rarity:"legendary", img:"fish/bonito.webp"},
-  // Champion (4)
-  {id:"tarpon",           name:"Tarpon",            rarity:"champion",  img:"fish/tarpon.webp"},
-  {id:"goliath_grouper",  name:"Goliath Grouper",   rarity:"champion",  img:"fish/goliath_grouper.webp"},
-  {id:"gag_grouper",      name:"Gag Grouper",       rarity:"champion",  img:"fish/gag_grouper.webp"},
-  {id:"red_snapper",      name:"Red Snapper",       rarity:"champion",  img:"fish/red_snapper.webp"},
-];
+const FISH = [{id:"catfish",name:"Catfish",rarity:"common",img:"fish/catfish.png"},
+{id:"baitfish",name:"Baitfish",rarity:"common",img:"fish/baitfish.png"},
+{id:"ladyfish",name:"Ladyfish",rarity:"rare",img:"fish/ladyfish.png"},
+{id:"speckledtrout",name:"Speckled Trout",rarity:"rare",img:"fish/speckledtrout.png"},
+{id:"silverperch",name:"Sea Perch",rarity:"rare",img:"fish/silverperch.png"},
+{id:"pufferfish",name:"Pufferfish",rarity:"rare",img:"fish/pufferfish.png"},
+{id:"sandseatrout",name:"Sand Trout",rarity:"epic",img:"fish/sandseatrout.png"},
+{id:"sheepshead",name:"Sheepshead",rarity:"epic",img:"fish/sheepshead.png"},
+{id:"mangrovesnapper",name:"Mangrove Snapper",rarity:"epic",img:"fish/mangrovesnapper.png"},
+{id:"whiting",name:"Whiting",rarity:"epic",img:"fish/whiting.png"},
+{id:"spanishmackerel",name:"Spanish Mackerel",rarity:"epic",img:"fish/spanishmackerel.png"},
+{id:"flounder",name:"Flounder",rarity:"epic",img:"fish/flounder.png"},
+{id:"redfish",name:"Redfish",rarity:"legendary",img:"fish/redfish.png"},
+{id:"snook",name:"Snook",rarity:"legendary",img:"fish/snook.png"},
+{id:"blackdrum",name:"Black Drum",rarity:"legendary",img:"fish/blackdrum.png"},
+{id:"pompano",name:"Pompano",rarity:"legendary",img:"fish/pompano.png"},
+{id:"shark",name:"Shark",rarity:"champion",img:"fish/shark.png"},
+{id:"tarpon",name:"Tarpon",rarity:"champion",img:"fish/tarpon.png"}];
 
-const RARITIES = ['common','uncommon','rare','epic','legendary','champion'];
+const RARITIES = ['common','rare','epic','legendary','champion'];
 const RARITY_LABEL = {
-  common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic',
+  common: 'Common', rare: 'Rare', epic: 'Epic',
   legendary: 'Legendary', champion: 'Champion'
 };
 
-const STATE_KEY = 'fishdex:state:v2';
-const LOG_KEY = 'fishdex:log:v2';
-const STATE_KEY_V1 = 'fishdex:state:v1';
-const LOG_KEY_V1 = 'fishdex:log:v1';
+const STATE_KEY = 'fishdex:state:v1';
+const LOG_KEY = 'fishdex:log:v1';
 const THEME_KEY = 'fishdex:theme:v1';
-
-// Map from old (v1) fish ids to new (v2) ids. Used by migrateFromV1().
-// Any id not in this map is assumed unchanged.
-const FISH_ID_MIGRATION = {
-  silverperch:      'silver_perch',
-  speckledtrout:    'speckled_seatrout',
-  sandseatrout:     'weakfish',         // sand seatrout = weakfish (Cynoscion regalis)
-  mangrovesnapper:  'mangrove_snapper',
-  spanishmackerel:  'spanish_mackerel',
-  blackdrum:        'black_drum',
-};
 
 // Theme catalog. `id` matches the [data-theme="..."] selector in CSS.
 // `price` is reserved for the future coin-gating step; ignored for now.
@@ -1359,49 +1325,7 @@ let currentTheme = 'default';
 // Storage layer: localStorage primary, window.storage fallback for one-time migration
 // from the original Claude-artifact build. Sync calls now (no awaits) but kept
 // `async` signatures so call sites don't need to change.
-// One-time migration from v1 storage (old fish ids) to v2 (new fish ids).
-// If v2 already exists, no-op. Otherwise, read v1, rename old ids, write v2.
-// v1 keys are NOT deleted — kept as a safety backup in case anything goes wrong.
-function migrateFromV1() {
-  try {
-    // If v2 already exists, migration has already run (or user is fresh post-update).
-    if (localStorage.getItem(STATE_KEY) !== null || localStorage.getItem(LOG_KEY) !== null) return;
-    const v1State = localStorage.getItem(STATE_KEY_V1);
-    const v1Log   = localStorage.getItem(LOG_KEY_V1);
-    if (!v1State && !v1Log) return;  // nothing to migrate
-
-    const remap = (id) => FISH_ID_MIGRATION[id] || id;
-
-    // Migrate state.catches: rename keys
-    if (v1State) {
-      try {
-        const parsed = JSON.parse(v1State);
-        const newCatches = {};
-        for (const [oldId, val] of Object.entries(parsed.catches || {})) {
-          newCatches[remap(oldId)] = val;
-        }
-        const newState = { ...parsed, catches: newCatches };
-        localStorage.setItem(STATE_KEY, JSON.stringify(newState));
-      } catch(e) { console.error('v1 state migration failed', e); }
-    }
-
-    // Migrate log: rewrite each entry's fishId
-    if (v1Log) {
-      try {
-        const parsed = JSON.parse(v1Log);
-        const newLog = (Array.isArray(parsed) ? parsed : []).map(entry =>
-          ({ ...entry, fishId: remap(entry.fishId) })
-        );
-        localStorage.setItem(LOG_KEY, JSON.stringify(newLog));
-      } catch(e) { console.error('v1 log migration failed', e); }
-    }
-  } catch(e) { console.error('migrateFromV1 failed', e); }
-}
-
 async function loadState() {
-  // Run migration before reading anything — must be sync so reads below see v2 keys.
-  migrateFromV1();
-
   try {
     let s = localStorage.getItem(STATE_KEY);
     // One-time migration from window.storage (artifact build) if present
@@ -1628,7 +1552,7 @@ function renderCard(f) {
         ${n >= 2 ? `<div class="count-badge">×${n}</div>` : ''}
         <div class="card-inner">
           <div class="card-face card-front">
-            <div class="card-img-wrap"><img class="card-img pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}"></div>
+            <div class="card-img-wrap"><img class="card-img pixel" decoding="async" src="${f.img}" alt="${f.name}"></div>
             <div class="card-name">${f.name}</div>
           </div>
           <div class="card-face card-back">
@@ -1644,7 +1568,7 @@ function renderCard(f) {
     <div class="${cls}" data-fish="${f.id}" data-action="shake">
       <div class="card-inner">
         <div class="card-face card-front">
-          <div class="card-img-wrap"><img class="card-img pixel" loading="lazy" decoding="async" src="${f.img}" alt="???"></div>
+          <div class="card-img-wrap"><img class="card-img pixel" decoding="async" src="${f.img}" alt="???"></div>
           <div class="card-name">???</div>
         </div>
       </div>
@@ -1656,7 +1580,7 @@ function renderNewFish() {
   return `
     <div class="book-page">
       <div class="scr-header">
-        <div class="scr-title">CONGRATS ON CATCH!</div>
+        <div class="scr-title">NICE CATCH!</div>
         <button class="back-btn" data-nav="home">←</button>
       </div>
       <p class="newfish-hint">Tap the fish you reeled in 🎣</p>
@@ -1665,7 +1589,7 @@ function renderNewFish() {
           <div class="card r-${f.rarity}" data-fish="${f.id}" data-action="open-modal">
             <div class="card-inner">
               <div class="card-face card-front">
-                <div class="card-img-wrap"><img class="card-img pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}"></div>
+                <div class="card-img-wrap"><img class="card-img pixel" decoding="async" src="${f.img}" alt="${f.name}"></div>
                 <div class="card-name">${f.name}</div>
               </div>
             </div>
@@ -1693,7 +1617,7 @@ function renderLog() {
     if (!f) return '';
     return `
       <div class="log-entry r-${f.rarity}">
-        <img class="pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}">
+        <img class="pixel" decoding="async" src="${f.img}" alt="${f.name}">
         <div class="meta">
           <h3>${f.name}</h3>
           <div class="when">${fmtDate(entry.date)}</div>
@@ -1751,7 +1675,7 @@ function renderEditModal(entryId) {
     <div class="modal" data-stop="1">
       <div class="modal-grip"></div>
       <div class="modal-fish">
-        <img class="pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}">
+        <img class="pixel" decoding="async" src="${f.img}" alt="${f.name}">
         <h2>${f.name}</h2>
         <div class="rarity-tag ${f.rarity}">${RARITY_LABEL[f.rarity]}</div>
       </div>
@@ -1803,7 +1727,7 @@ function renderModal() {
     <div class="modal" data-stop="1">
       <div class="modal-grip"></div>
       <div class="modal-fish">
-        <img class="pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}">
+        <img class="pixel" decoding="async" src="${f.img}" alt="${f.name}">
         <h2>${f.name}</h2>
         <div class="rarity-tag ${f.rarity}">${RARITY_LABEL[f.rarity]}</div>
       </div>
