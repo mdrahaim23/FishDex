@@ -555,7 +555,7 @@
   }
   .stats-bar strong { font-family: 'Bungee', sans-serif; font-size: 18px; }
 
-  .rarity-section { margin-bottom: 28px; }
+  .rarity-section { margin-bottom: 40px; }
   .rarity-header {
     font-family: 'Bungee', sans-serif;
     font-size: 16px;
@@ -774,7 +774,7 @@
     animation: goldShift 5s ease-in-out infinite;
     box-shadow:
       0 4px 0 var(--r-legendary-deep),
-      0 0 24px rgba(251, 191, 36, 0.6),
+      0 0 18px rgba(251, 191, 36, 0.45),
       inset 0 0 12px rgba(253, 224, 71, 0.25);
     position: relative;
   }
@@ -823,10 +823,18 @@
       rgba(26, 6, 8, 0.92) 100%);
     background-size: 300% 300%;
     animation: rubyShift 5s ease-in-out infinite, rubyHalo 2.5s ease-in-out infinite;
-    /* Static piece of the shadow stack: 0 4px drop + inner crimson vignette.
-       rubyHalo restates the whole stack on each animation frame. */
+    /* Static piece of the shadow stack:
+       (1) 0 4px solid drop — the same chunky shadow every other tier has;
+       (2) 0 8px 16px soft red bloom — lifts the card off the page so it
+           looks like it's floating above red light. Champion only;
+       (3) outer red halo (animated by rubyHalo);
+       (4) inner crimson vignette.
+       rubyHalo restates this whole stack on each animation frame, so any
+       additions here MUST also be added to both keyframe stops below or
+       they'll get erased on the first tick. */
     box-shadow:
       0 4px 0 var(--r-champion-1),
+      0 8px 16px rgba(220, 38, 38, 0.4),
       0 0 18px rgba(220, 38, 38, 0.45),
       inset 0 0 18px rgba(153, 27, 27, 0.55);
     position: relative;
@@ -837,17 +845,20 @@
     100% { background-position: 0% 0%; }
   }
   /* Halo breathes on its own clock — independent of the gradient shift so the
-     two effects layer without locking phase. */
+     two effects layer without locking phase. The 0 8px 16px soft red bloom
+     stays constant; only the outer halo and inner vignette pulse. */
   @keyframes rubyHalo {
     0%, 100% {
       box-shadow:
         0 4px 0 var(--r-champion-1),
+        0 8px 16px rgba(220, 38, 38, 0.4),
         0 0 18px rgba(220, 38, 38, 0.45),
         inset 0 0 18px rgba(153, 27, 27, 0.55);
     }
     50% {
       box-shadow:
         0 4px 0 var(--r-champion-1),
+        0 8px 16px rgba(220, 38, 38, 0.4),
         0 0 32px rgba(220, 38, 38, 0.85),
         inset 0 0 22px rgba(220, 38, 38, 0.65);
     }
@@ -872,6 +883,11 @@
       #fca5a5 50%,
       #dc2626 75%,
       #4a0a14 100%);
+    /* Gradient is 2x the ring size so panning background-position shows only
+       a slice of it at a time — produces a drifting sheen, like the gem is
+       catching light from a moving source. */
+    background-size: 200% 200%;
+    animation: rubyRingSweep 3s linear infinite;
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
@@ -884,22 +900,39 @@
     pointer-events: none;
     z-index: 2;
   }
+  @keyframes rubyRingSweep {
+    0%   { background-position:   0%   0%; }
+    100% { background-position: 200% 200%; }
+  }
   /* ✦ — sharp red diamond glint. Three text-shadow layers stack a tight bright
      core, a medium bloom, and a wide soft halo so the sparkle reads like a
      real point of light rather than a fuzzy red blob. */
   .card.r-champion::after {
     content: '✦';
     position: absolute;
-    top: -6px; right: -6px;
+    top: -2px; right: -2px;
     font-size: 14px;
     color: #fee2e2;
     text-shadow:
       0 0 3px #fef2f2,
       0 0 8px #ef4444,
       0 0 16px #dc2626;
-    animation: sparkleTwinkle 1.4s ease-in-out infinite;
+    animation: rubyTwinkle 2.4s ease-in-out infinite;
     z-index: 3;
     pointer-events: none;
+  }
+  /* Flicker at uneven intervals so it reads as a real catching-light glint
+     rather than a smooth sine pulse. Bursts bright (8%, 22%), dips, holds
+     dim through the middle, brief second flash (62%), settles. */
+  @keyframes rubyTwinkle {
+    0%   { opacity: 0.3; transform: scale(0.85) rotate(0deg); }
+    8%   { opacity: 1.0; transform: scale(1.25) rotate(45deg); }
+    14%  { opacity: 0.5; transform: scale(0.95) rotate(80deg); }
+    22%  { opacity: 0.95; transform: scale(1.2) rotate(120deg); }
+    35%  { opacity: 0.35; transform: scale(0.85) rotate(160deg); }
+    62%  { opacity: 0.85; transform: scale(1.15) rotate(240deg); }
+    75%  { opacity: 0.4; transform: scale(0.9) rotate(300deg); }
+    100% { opacity: 0.3; transform: scale(0.85) rotate(360deg); }
   }
   @keyframes sparkleTwinkle {
     0%, 100% { opacity: 0.4; transform: scale(0.8) rotate(0deg); }
@@ -916,6 +949,7 @@
     box-shadow: 0 4px 0 var(--r-champion-1);
   }
   .card.r-champion.uncaught::after { display: none; }
+  .card.r-champion.uncaught::before { animation: none; }
 
   /* Uncaught Legendary + Champion still show their tier on the name label —
      the card body goes dark, but the name pill stays gradient so you can
@@ -1276,7 +1310,7 @@
   .log-entry.r-uncommon  { border-color: var(--r-uncommon-deep); }
   .log-entry.r-rare      { border-color: var(--r-rare-deep); }
   .log-entry.r-epic      { border-color: var(--r-epic-deep); }
-  .log-entry.r-legendary { border-color: var(--r-legendary-deep); }
+  .log-entry.r-legendary { border-color: var(--r-legendary-2); }
   .log-entry.r-champion  { border-color: var(--r-champion-3); }
   .log-entry.r-unlisted  { border-color: #1a1a1a; }
   .log-entry img {
