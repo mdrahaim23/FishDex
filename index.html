@@ -81,15 +81,17 @@
     --r-epic: #f0abfc;
     --r-epic-deep: #a21caf;
 
-    --r-legendary-1: #94a3b8;
-    --r-legendary-2: #f1f5f9;
-    --r-legendary-3: #cbd5e1;
-    --r-legendary-deep: #64748b;
+    /* Legendary: gold sheen (palindromic — 1 and 3 are darker, 2 is the bright midpoint) */
+    --r-legendary-1: #d97706;
+    --r-legendary-2: #fde047;
+    --r-legendary-3: #fef3c7;
+    --r-legendary-deep: #92400e;
 
-    --r-champion-1: #fef3c7;
-    --r-champion-2: #fbbf24;
-    --r-champion-3: #d97706;
-    --r-champion-4: #fde047;
+    /* Champion: ruby in obsidian. 1 = darkest (near-black with red bias),
+       2 = mid wine, 3 = bright ruby (also used for log-entry border). */
+    --r-champion-1: #1a0608;
+    --r-champion-2: #4a0a14;
+    --r-champion-3: #dc2626;
   }
 
   /* ============================================================
@@ -582,24 +584,25 @@
       var(--r-legendary-1) 100%);
     background-size: 200% 100%;
     animation: shimmerLoop 4s ease-in-out infinite;
-    color: #1e293b;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
-    box-shadow: 0 0 14px rgba(203, 213, 225, 0.5);
-  }
-
-  /* CHAMPION HEADER — palindromic gold loop */
-  .rarity-header.champion {
-    background: linear-gradient(90deg,
-      var(--r-champion-3) 0%,
-      var(--r-champion-4) 25%,
-      var(--r-champion-1) 50%,
-      var(--r-champion-4) 75%,
-      var(--r-champion-3) 100%);
-    background-size: 200% 100%;
-    animation: shimmerLoop 3s ease-in-out infinite;
     color: #3a2208;
     text-shadow: 0 1px 0 rgba(255,255,255,0.5);
     box-shadow: 0 0 22px rgba(251, 191, 36, 0.55), inset 0 0 0 2px rgba(255,255,255,0.4);
+  }
+
+  /* CHAMPION HEADER — palindromic ruby loop. Light text on dark ruby, with a
+     red glow halo to match the card's red palette. */
+  .rarity-header.champion {
+    background: linear-gradient(90deg,
+      var(--r-champion-1) 0%,
+      var(--r-champion-2) 25%,
+      var(--r-champion-3) 50%,
+      var(--r-champion-2) 75%,
+      var(--r-champion-1) 100%);
+    background-size: 200% 100%;
+    animation: shimmerLoop 3s ease-in-out infinite;
+    color: #fee2e2;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.6), 0 0 8px rgba(220, 38, 38, 0.4);
+    box-shadow: 0 0 22px rgba(220, 38, 38, 0.55), inset 0 0 0 2px rgba(252, 165, 165, 0.35);
   }
 
   /* a palindromic gradient loops seamlessly when shifted by one tile */
@@ -758,50 +761,8 @@
   .card.r-rare      { border-color: var(--r-rare); box-shadow: 0 4px 0 var(--r-rare-deep); }
   .card.r-epic      { border-color: var(--r-epic); box-shadow: 0 4px 0 var(--r-epic-deep); }
 
-  /* LEGENDARY CARD — silver sheen, mirrors Champion's gold pattern.
-     Solid border + body shimmer + drop shadow + glow + sparkle. The simplicity
-     of one color story (silver) reads way more clearly than chromatic gradients. */
+  /* LEGENDARY CARD — gold sheen. Diagonal palindrome shimmer + sparkle. */
   .card.r-legendary {
-    border: 4px solid #cbd5e1;
-    background: linear-gradient(135deg,
-      rgba(100, 116, 139, 0.5) 0%,
-      rgba(148, 163, 184, 0.7) 30%,
-      rgba(241, 245, 249, 0.85) 50%,
-      rgba(148, 163, 184, 0.7) 70%,
-      rgba(100, 116, 139, 0.5) 100%);
-    background-size: 300% 300%;
-    animation: silverShift 5s ease-in-out infinite;
-    box-shadow:
-      0 4px 0 #64748b,
-      0 0 24px rgba(203, 213, 225, 0.6),
-      inset 0 0 12px rgba(241, 245, 249, 0.25);
-    position: relative;
-  }
-  @keyframes silverShift {
-    0%   { background-position: 0% 0%; }
-    50%  { background-position: 100% 100%; }
-    100% { background-position: 0% 0%; }
-  }
-  .card.r-legendary::after {
-    content: '✦';
-    position: absolute;
-    top: -6px; right: -6px;
-    font-size: 14px;
-    color: #f1f5f9;
-    text-shadow: 0 0 6px #cbd5e1, 0 0 12px #cbd5e1;
-    animation: sparkleTwinkle 1.8s ease-in-out infinite;
-    z-index: 3;
-    pointer-events: none;
-  }
-  .card.r-legendary.uncaught {
-    background: rgba(20, 40, 60, 0.55);
-    animation: none;
-    box-shadow: 0 4px 0 #64748b;
-  }
-  .card.r-legendary.uncaught::after { display: none; }
-
-  /* CHAMPION CARD — gold sheen, ease-shifted for smoothness */
-  .card.r-champion {
     border: 4px solid #fbbf24;
     background: linear-gradient(135deg,
       rgba(217, 119, 6, 0.5) 0%,
@@ -812,7 +773,7 @@
     background-size: 300% 300%;
     animation: goldShift 5s ease-in-out infinite;
     box-shadow:
-      0 4px 0 var(--r-champion-3),
+      0 4px 0 var(--r-legendary-deep),
       0 0 24px rgba(251, 191, 36, 0.6),
       inset 0 0 12px rgba(253, 224, 71, 0.25);
     position: relative;
@@ -822,7 +783,7 @@
     50%  { background-position: 100% 100%; }
     100% { background-position: 0% 0%; }
   }
-  .card.r-champion::after {
+  .card.r-legendary::after {
     content: '✦';
     position: absolute;
     top: -6px; right: -6px;
@@ -833,14 +794,126 @@
     z-index: 3;
     pointer-events: none;
   }
+  .card.r-legendary.uncaught {
+    background: rgba(20, 40, 60, 0.55);
+    animation: none;
+    box-shadow: 0 4px 0 var(--r-legendary-deep);
+  }
+  .card.r-legendary.uncaught::after { display: none; }
+
+  /* CHAMPION CARD — ruby in obsidian.
+     Architecture: the faceted ruby ring is a ::before pseudo-element with
+     a stacked-mask cutout (outer rect minus inner rect = hollow ring), so
+     the ring is genuinely hollow — interior is fully transparent and shows
+     whatever the card's own background is. This lets uncaught champion use
+     the SAME translucent dark-blue scrim as every other tier (no bleed).
+     The body shimmer (caught state) and the halo pulse stay on the card
+     itself; the ring just floats on top of them.
+     Effects: (1) hollow gradient ring via ::before + mask-composite,
+     (2) breathing red halo via @keyframes rubyHalo on box-shadow,
+     (3) inner crimson vignette baked into the static halo state,
+     (4) upgraded ✦ sparkle with three-layer red glow on ::after. */
+  .card.r-champion {
+    border: none;
+    background: linear-gradient(135deg,
+      rgba(26, 6, 8, 0.92) 0%,
+      rgba(74, 10, 20, 0.88) 30%,
+      rgba(220, 38, 38, 0.55) 50%,
+      rgba(74, 10, 20, 0.88) 70%,
+      rgba(26, 6, 8, 0.92) 100%);
+    background-size: 300% 300%;
+    animation: rubyShift 5s ease-in-out infinite, rubyHalo 2.5s ease-in-out infinite;
+    /* Static piece of the shadow stack: 0 4px drop + inner crimson vignette.
+       rubyHalo restates the whole stack on each animation frame. */
+    box-shadow:
+      0 4px 0 var(--r-champion-1),
+      0 0 18px rgba(220, 38, 38, 0.45),
+      inset 0 0 18px rgba(153, 27, 27, 0.55);
+    position: relative;
+  }
+  @keyframes rubyShift {
+    0%   { background-position: 0% 0%; }
+    50%  { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+  }
+  /* Halo breathes on its own clock — independent of the gradient shift so the
+     two effects layer without locking phase. */
+  @keyframes rubyHalo {
+    0%, 100% {
+      box-shadow:
+        0 4px 0 var(--r-champion-1),
+        0 0 18px rgba(220, 38, 38, 0.45),
+        inset 0 0 18px rgba(153, 27, 27, 0.55);
+    }
+    50% {
+      box-shadow:
+        0 4px 0 var(--r-champion-1),
+        0 0 32px rgba(220, 38, 38, 0.85),
+        inset 0 0 22px rgba(220, 38, 38, 0.65);
+    }
+  }
+  /* Hollow gradient ring — ::before is sized to the card and filled with the
+     ruby gradient. A two-layer mask composites "outer rect XOR inner rect"
+     so only the 4px-thick edge shows; the interior is genuinely transparent.
+     Ring outer radius matches card (.card has border-radius:16px); ring inner
+     radius is 12px (16 - 4) so the cut is clean.
+     Standard `mask-composite: exclude` (iOS Safari 15.4+). The -webkit- prefix
+     uses different keyword semantics: `source-out` on the second layer means
+     "show the first layer where the second isn't" — same effect. Both set
+     for cross-engine safety. */
+  .card.r-champion::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    background: linear-gradient(135deg,
+      #4a0a14 0%,
+      #dc2626 25%,
+      #fca5a5 50%,
+      #dc2626 75%,
+      #4a0a14 100%);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+            mask-composite: exclude;
+    padding: 4px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  /* ✦ — sharp red diamond glint. Three text-shadow layers stack a tight bright
+     core, a medium bloom, and a wide soft halo so the sparkle reads like a
+     real point of light rather than a fuzzy red blob. */
+  .card.r-champion::after {
+    content: '✦';
+    position: absolute;
+    top: -6px; right: -6px;
+    font-size: 14px;
+    color: #fee2e2;
+    text-shadow:
+      0 0 3px #fef2f2,
+      0 0 8px #ef4444,
+      0 0 16px #dc2626;
+    animation: sparkleTwinkle 1.4s ease-in-out infinite;
+    z-index: 3;
+    pointer-events: none;
+  }
   @keyframes sparkleTwinkle {
     0%, 100% { opacity: 0.4; transform: scale(0.8) rotate(0deg); }
     50%      { opacity: 1; transform: scale(1.2) rotate(180deg); }
   }
   .card.r-champion.uncaught {
+    /* Mystery state: kill body shimmer + halo + inner vignette + sparkle.
+       Body becomes the same translucent dark-blue scrim as every other
+       uncaught tier — and because the ring is a separate hollow ::before
+       layer, there's no ruby underneath to bleed through. Genuinely
+       consistent with the rest of the dex. */
     background: rgba(20, 40, 60, 0.55);
     animation: none;
-    box-shadow: 0 4px 0 var(--r-champion-3);
+    box-shadow: 0 4px 0 var(--r-champion-1);
   }
   .card.r-champion.uncaught::after { display: none; }
 
@@ -852,16 +925,16 @@
       var(--r-legendary-1),
       var(--r-legendary-2),
       var(--r-legendary-3));
-    color: #1e293b;
+    color: #3a2208;
     border: 1px solid rgba(255,255,255,0.35);
   }
   .card.r-champion.uncaught .card-name {
     background: linear-gradient(90deg,
+      var(--r-champion-1),
       var(--r-champion-3),
-      var(--r-champion-4),
       var(--r-champion-2));
-    color: #3a2208;
-    border: 1px solid rgba(255,255,255,0.35);
+    color: #fee2e2;
+    border: 1px solid rgba(252, 165, 165, 0.35);
   }
 
   /* === UNLISTED — pseudo-rarity for field catches not yet in the dex === */
@@ -1058,11 +1131,11 @@
   .rarity-tag.epic      { background: var(--r-epic-deep); }
   .rarity-tag.legendary {
     background: linear-gradient(90deg, var(--r-legendary-1), var(--r-legendary-2), var(--r-legendary-3));
-    color: #1e293b;
+    color: #3a2208;
   }
   .rarity-tag.champion  {
-    background: linear-gradient(90deg, var(--r-champion-3), var(--r-champion-4), var(--r-champion-2));
-    color: #3a2208;
+    background: linear-gradient(90deg, var(--r-champion-1), var(--r-champion-3), var(--r-champion-2));
+    color: #fee2e2;
   }
   .rarity-tag.unlisted {
     background: linear-gradient(90deg, #1a1a1a, #2a2a2a);
