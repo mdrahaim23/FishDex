@@ -81,10 +81,10 @@
     --r-epic: #f0abfc;
     --r-epic-deep: #a21caf;
 
-    --r-legendary-1: #fbcfe8;
-    --r-legendary-2: #ffffff;
-    --r-legendary-3: #bae6fd;
-    --r-legendary-deep: #f9a8d4;
+    --r-legendary-1: #94a3b8;
+    --r-legendary-2: #f1f5f9;
+    --r-legendary-3: #cbd5e1;
+    --r-legendary-deep: #64748b;
 
     --r-champion-1: #fef3c7;
     --r-champion-2: #fbbf24;
@@ -582,9 +582,9 @@
       var(--r-legendary-1) 100%);
     background-size: 200% 100%;
     animation: shimmerLoop 4s ease-in-out infinite;
-    color: #4c1d95;
+    color: #1e293b;
     text-shadow: 0 1px 0 rgba(255,255,255,0.6);
-    box-shadow: 0 0 14px rgba(186, 230, 253, 0.4);
+    box-shadow: 0 0 14px rgba(203, 213, 225, 0.5);
   }
 
   /* CHAMPION HEADER — palindromic gold loop */
@@ -758,79 +758,47 @@
   .card.r-rare      { border-color: var(--r-rare); box-shadow: 0 4px 0 var(--r-rare-deep); }
   .card.r-epic      { border-color: var(--r-epic); box-shadow: 0 4px 0 var(--r-epic-deep); }
 
-  /* LEGENDARY CARD — soft holographic with chromatic ring.
-     Body is semi-transparent like other caught cards so the page theme reads
-     through. The chromatic ring is painted via a ::before pseudo-element
-     (same approach as uncaught) — keeps the legendary feel without filling
-     the body with a heavy holo gradient. A subtle inner glow adds depth. */
+  /* LEGENDARY CARD — silver sheen, mirrors Champion's gold pattern.
+     Solid border + body shimmer + drop shadow + glow + sparkle. The simplicity
+     of one color story (silver) reads way more clearly than chromatic gradients. */
   .card.r-legendary {
-    border: 3px solid transparent;
-    background: rgba(255, 255, 255, 0.85);
+    border: 4px solid #cbd5e1;
+    background: linear-gradient(135deg,
+      rgba(100, 116, 139, 0.5) 0%,
+      rgba(148, 163, 184, 0.7) 30%,
+      rgba(241, 245, 249, 0.85) 50%,
+      rgba(148, 163, 184, 0.7) 70%,
+      rgba(100, 116, 139, 0.5) 100%);
+    background-size: 300% 300%;
+    animation: silverShift 5s ease-in-out infinite;
     box-shadow:
-      0 4px 0 #93c5fd,
-      0 0 14px rgba(186, 230, 253, 0.50),
-      inset 0 0 18px rgba(244, 168, 213, 0.12);
+      0 4px 0 #64748b,
+      0 0 24px rgba(203, 213, 225, 0.6),
+      inset 0 0 12px rgba(241, 245, 249, 0.25);
     position: relative;
   }
-  .card.r-legendary::before {
-    content: '';
-    position: absolute;
-    inset: -3px;
-    border-radius: inherit;
-    padding: 3px;
-    background: linear-gradient(135deg,
-      #fbcfe8 0%,
-      #eef2ff 35%,
-      #bfdbfe 70%,
-      #fbcfe8 100%);
-    background-size: 300% 300%;
-    animation: holoShift 6s ease-in-out infinite;
-    -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-            mask-composite: exclude;
-    pointer-events: none;
-    z-index: -1;
-  }
-  @keyframes holoShift {
+  @keyframes silverShift {
     0%   { background-position: 0% 0%; }
     50%  { background-position: 100% 100%; }
     100% { background-position: 0% 0%; }
   }
-  .card.r-legendary.uncaught {
-    /* Body is fully transparent (well, semi-transparent dark blue like other
-       uncaught cards) so the page theme bleeds through. The chromatic border
-       is painted via a ::before pseudo-element instead of background-clip,
-       which avoids the gradient leaking through the body. */
-    background: rgba(20, 40, 60, 0.55);
-    border: 3px solid transparent;
-    animation: none;
-    box-shadow: 0 4px 0 #93c5fd;
-    position: relative;
-  }
-  .card.r-legendary.uncaught::before {
-    content: '';
+  .card.r-legendary::after {
+    content: '✦';
     position: absolute;
-    inset: -3px;
-    border-radius: inherit;
-    padding: 3px;
-    background: linear-gradient(135deg,
-      #fbcfe8 0%,
-      #eef2ff 35%,
-      #bfdbfe 70%,
-      #fbcfe8 100%);
-    /* mask-composite trick: punches out the inner area, leaving only a 3px
-       gradient ring around the card. Result: rounded chromatic frame with
-       transparent fill. */
-    -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-            mask-composite: exclude;
+    top: -6px; right: -6px;
+    font-size: 14px;
+    color: #f1f5f9;
+    text-shadow: 0 0 6px #cbd5e1, 0 0 12px #cbd5e1;
+    animation: sparkleTwinkle 1.8s ease-in-out infinite;
+    z-index: 3;
     pointer-events: none;
-    z-index: -1;
   }
+  .card.r-legendary.uncaught {
+    background: rgba(20, 40, 60, 0.55);
+    animation: none;
+    box-shadow: 0 4px 0 #64748b;
+  }
+  .card.r-legendary.uncaught::after { display: none; }
 
   /* CHAMPION CARD — gold sheen, ease-shifted for smoothness */
   .card.r-champion {
@@ -884,7 +852,7 @@
       var(--r-legendary-1),
       var(--r-legendary-2),
       var(--r-legendary-3));
-    color: #4c1d95;
+    color: #1e293b;
     border: 1px solid rgba(255,255,255,0.35);
   }
   .card.r-champion.uncaught .card-name {
@@ -1090,7 +1058,7 @@
   .rarity-tag.epic      { background: var(--r-epic-deep); }
   .rarity-tag.legendary {
     background: linear-gradient(90deg, var(--r-legendary-1), var(--r-legendary-2), var(--r-legendary-3));
-    color: #4c1d95;
+    color: #1e293b;
   }
   .rarity-tag.champion  {
     background: linear-gradient(90deg, var(--r-champion-3), var(--r-champion-4), var(--r-champion-2));
