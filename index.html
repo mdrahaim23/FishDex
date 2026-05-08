@@ -629,6 +629,13 @@
 
   .card {
     aspect-ratio: 1 / 1;
+    /* min-width:0 is critical: grid items default to min-width:auto (intrinsic
+       content size), so .card-name's `white-space: nowrap` would force
+       columns wider than the container whenever a fish has a long name
+       (e.g. SPECKLED SEATROUT). The ellipsis only kicks in once we let the
+       column shrink. Without this, the entire collection grid overflows
+       right on real devices. */
+    min-width: 0;
     border-radius: 16px;
     border: 3px solid;
     background: rgba(255,255,255,0.85);
