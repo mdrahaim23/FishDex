@@ -84,7 +84,7 @@
     --r-legendary-1: #fbcfe8;
     --r-legendary-2: #ffffff;
     --r-legendary-3: #bae6fd;
-    --r-legendary-deep: #7c3aed;
+    --r-legendary-deep: #f9a8d4;
 
     --r-champion-1: #fef3c7;
     --r-champion-2: #fbbf24;
@@ -758,36 +758,40 @@
   .card.r-rare      { border-color: var(--r-rare); box-shadow: 0 4px 0 var(--r-rare-deep); }
   .card.r-epic      { border-color: var(--r-epic); box-shadow: 0 4px 0 var(--r-epic-deep); }
 
-  /* LEGENDARY CARD — soft holographic with conic shimmer (no banding).
-     Uses the double-background-clip trick: one gradient clipped to padding-box
-     paints the card body; another gradient clipped to border-box paints the
-     border ring. Unlike border-image, this respects border-radius cleanly so
-     the chromatic edge is properly rounded. The body gradient is slightly
-     deepened from the previous version + an inner shadow adds contrast so
-     the fish image pops against the holo background. */
+  /* LEGENDARY CARD — soft holographic with chromatic ring.
+     Body is semi-transparent like other caught cards so the page theme reads
+     through. The chromatic ring is painted via a ::before pseudo-element
+     (same approach as uncaught) — keeps the legendary feel without filling
+     the body with a heavy holo gradient. A subtle inner glow adds depth. */
   .card.r-legendary {
     border: 3px solid transparent;
-    background:
-      /* card body — pastel holo, gently saturated */
-      linear-gradient(135deg,
-        rgba(248, 188, 222, 0.50) 0%,
-        rgba(255, 255, 255, 0.88) 35%,
-        rgba(165, 213, 253, 0.60) 70%,
-        rgba(248, 188, 222, 0.50) 100%) padding-box,
-      /* gradient ring — pink → soft white → blue, less aggressive than before */
-      linear-gradient(135deg,
-        #fbcfe8 0%,
-        #eef2ff 35%,
-        #bfdbfe 70%,
-        #fbcfe8 100%) border-box;
-    background-size: 300% 300%, 100% 100%;
-    animation: holoShift 6s ease-in-out infinite;
+    background: rgba(255, 255, 255, 0.85);
     box-shadow:
       0 4px 0 #93c5fd,
       0 0 14px rgba(186, 230, 253, 0.50),
-      inset 0 0 18px rgba(244, 168, 213, 0.12),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+      inset 0 0 18px rgba(244, 168, 213, 0.12);
     position: relative;
+  }
+  .card.r-legendary::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    padding: 3px;
+    background: linear-gradient(135deg,
+      #fbcfe8 0%,
+      #eef2ff 35%,
+      #bfdbfe 70%,
+      #fbcfe8 100%);
+    background-size: 300% 300%;
+    animation: holoShift 6s ease-in-out infinite;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
   }
   @keyframes holoShift {
     0%   { background-position: 0% 0%; }
