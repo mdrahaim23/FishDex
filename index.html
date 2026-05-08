@@ -795,17 +795,37 @@
     100% { background-position: 0% 0%; }
   }
   .card.r-legendary.uncaught {
-    background:
-      /* dark mystery body — opaque so the chromatic ring doesn't bleed through */
-     linear-gradient(rgba(20, 40, 60, 0.55), rgba(20, 40, 60, 0.55)) padding-box,
-      /* chromatic ring stays — only the border carries the legendary feel */
-      linear-gradient(135deg,
-        #fbcfe8 0%,
-        #eef2ff 35%,
-        #bfdbfe 70%,
-        #fbcfe8 100%) border-box;
+    /* Body is fully transparent (well, semi-transparent dark blue like other
+       uncaught cards) so the page theme bleeds through. The chromatic border
+       is painted via a ::before pseudo-element instead of background-clip,
+       which avoids the gradient leaking through the body. */
+    background: rgba(20, 40, 60, 0.55);
+    border: 3px solid transparent;
     animation: none;
     box-shadow: 0 4px 0 #93c5fd;
+    position: relative;
+  }
+  .card.r-legendary.uncaught::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    padding: 3px;
+    background: linear-gradient(135deg,
+      #fbcfe8 0%,
+      #eef2ff 35%,
+      #bfdbfe 70%,
+      #fbcfe8 100%);
+    /* mask-composite trick: punches out the inner area, leaving only a 3px
+       gradient ring around the card. Result: rounded chromatic frame with
+       transparent fill. */
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    z-index: -1;
   }
 
   /* CHAMPION CARD — gold sheen, ease-shifted for smoothness */
