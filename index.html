@@ -814,7 +814,11 @@
      (3) inner crimson vignette baked into the static halo state,
      (4) upgraded ✦ sparkle with three-layer red glow on ::after. */
   .card.r-champion {
-    border: none;
+    /* Transparent 3px border preserves box-model footprint matching other
+       tiers (common/rare/etc all use border:3px solid <color>). Without
+       this, champion cards render 3px narrower on each side and break grid
+       alignment. The visible ring is the ::before pseudo, not this border. */
+    border: 3px solid transparent;
     background: linear-gradient(135deg,
       rgba(26, 6, 8, 0.92) 0%,
       rgba(74, 10, 20, 0.88) 30%,
