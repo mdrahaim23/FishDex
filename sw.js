@@ -2,7 +2,7 @@
 // To force users onto a new build: bump CACHE_VERSION below.
 // On activate, old caches are deleted automatically.
 
-const CACHE_VERSION = 'fishdex-v25';
+const CACHE_VERSION = 'fishdex-v26';
 
 // Fish sprites — kept as a list so it's clear what gets precached. If you add
 // new fish to the FISH array in index.html, add the new id here too (or rely
@@ -16,9 +16,9 @@ const FISH_IDS = [
   // Rare
   'weakfish', 'whiting', 'sheepshead', 'mangrove_snapper',
   // Epic
-  'spanish_mackerel', 'flounder', 'black_drum', 'jack_crevalle',
+  'spanish_mackerel', 'flounder', 'black_drum', 'jack_crevalle', 'bluefish', 'houndfish',
   // Legendary
-  'redfish', 'snook', 'pompano', 'barracuda', 'shark', 'bonito',
+  'redfish', 'snook', 'pompano', 'barracuda', 'shark', 'bonito', 'permit', 'tripletail',
   // Champion
   'tarpon', 'goliath_grouper', 'gag_grouper', 'red_snapper',
 ];
