@@ -555,6 +555,68 @@
   }
   .stats-bar strong { font-family: 'Bungee', sans-serif; font-size: 18px; }
 
+  /* === CATEGORY TABS (Saltwater / Freshwater) === */
+  /* Base = ocean context (Collection). Active tab is darkened/filled.
+     Paper + modal contexts are overridden below. Also reused as a segmented
+     toggle (.seg) inside the log modals. */
+  .cat-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .cat-tabs.seg { margin-bottom: 0; }
+  .cat-tab {
+    flex: 1;
+    font-family: 'Bungee', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 12px 8px;
+    border-radius: 14px;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.18);
+    color: var(--foam);
+    opacity: 0.55;
+    transition: opacity 0.15s, background 0.15s, transform 0.1s;
+  }
+  .cat-tab.active {
+    background: rgba(0,0,0,0.45);
+    border-color: rgba(255,255,255,0.25);
+    opacity: 1;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.12);
+  }
+  .cat-tab:active { transform: scale(0.97); }
+  /* Paper contexts: New Fish page + modals sit on light paper, need ink text */
+  .book-page .cat-tab,
+  .modal .cat-tab {
+    background: rgba(160,120,60,0.10);
+    border-color: var(--paper-edge);
+    color: var(--ink);
+  }
+  .book-page .cat-tab.active,
+  .modal .cat-tab.active {
+    background: rgba(160,120,60,0.34);
+    border-color: var(--paper-shadow);
+    box-shadow: inset 0 0 0 2px rgba(160,120,60,0.3);
+  }
+
+  /* salt/fresh pill on catch-log entries (paper context) */
+  .cat-pill {
+    display: inline-block;
+    font-family: 'Nunito', sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 8px;
+    margin-left: 7px;
+    vertical-align: middle;
+  }
+  .cat-pill.salt  { background: rgba(14,116,144,0.16);  color: #0e7490; border: 1px solid rgba(14,116,144,0.34); }
+  .cat-pill.fresh { background: rgba(21,128,61,0.15);   color: #15803d; border: 1px solid rgba(21,128,61,0.32); }
+
   .rarity-section { margin-bottom: 40px; }
   .rarity-header {
     font-family: 'Bungee', sans-serif;
@@ -1581,6 +1643,11 @@ const FISH = [
   {id:"goliath_grouper",  name:"Goliath Grouper",   rarity:"champion",  img:"fish/goliath_grouper.webp"},
   {id:"gag_grouper",      name:"Gag Grouper",       rarity:"champion",  img:"fish/gag_grouper.webp"},
   {id:"red_snapper",      name:"Red Snapper",       rarity:"champion",  img:"fish/red_snapper.webp"},
+  // Freshwater. Saltwater is the default category (entries without a `cat`
+  // field are treated as salt), so only freshwater fish carry an explicit cat.
+  {id:"bluegill",         name:"Bluegill",          rarity:"common",    img:"fish/bluegill.webp",         cat:"fresh"},
+  {id:"largemouth_bass",  name:"Largemouth Bass",   rarity:"uncommon",  img:"fish/largemouth_bass.webp",  cat:"fresh"},
+  {id:"smallmouth_bass",  name:"Smallmouth Bass",   rarity:"rare",      img:"fish/smallmouth_bass.webp",  cat:"fresh"},
 ];
 
 const RARITIES = ['common','uncommon','rare','epic','legendary','champion'];
@@ -1591,6 +1658,13 @@ const RARITY_LABEL = {
   common: 'Common', uncommon: 'Uncommon', rare: 'Rare', epic: 'Epic',
   legendary: 'Legendary', champion: 'Champion', unlisted: 'Unlisted'
 };
+
+// Catch category. A fish (or unlisted catch) is 'salt' or 'fresh'. Saltwater is
+// the default: FISH entries and log entries created before the freshwater split
+// have no `cat` field, so anything missing one is treated as salt.
+const CATEGORIES = ['salt', 'fresh'];
+const CAT_LABEL = { salt: 'Saltwater', fresh: 'Freshwater' };
+function fishCat(f) { return (f && f.cat) || 'salt'; }
 
 // Normalize a free-text fish name for use as a key. Lowercase, trim, collapse
 // internal whitespace. "  Wa  Hoo " → "wa hoo". Used so that "Wahoo", "wahoo",
@@ -1630,6 +1704,7 @@ const THEMES = [
 let state = { catches: {}, unlisted: {} };
 let log = [];
 let view = 'home';
+let catTab = 'salt';   // active category tab on Collection + New Fish screens
 let modalFishId = null;
 let flippedCard = null;
 let recentlyCaught = new Set();
@@ -1809,10 +1884,22 @@ function toast(msg) {
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2200);
 }
-function rarityCount(rarity) {
-  const all = FISH.filter(f => f.rarity === rarity);
+function rarityCount(rarity, cat) {
+  const all = FISH.filter(f => f.rarity === rarity && fishCat(f) === cat);
   const got = all.filter(f => caughtFor(f.id)).length;
   return `${got}/${all.length}`;
+}
+
+// Saltwater / Freshwater tab bar shown atop Collection + New Fish. Active tab
+// is darkened. Clicking the other tab swaps catTab and re-renders.
+function renderCatTabs() {
+  return `
+    <div class="cat-tabs">
+      ${CATEGORIES.map(c => `
+        <button class="cat-tab ${catTab === c ? 'active' : ''}" data-cat-tab="${c}">${CAT_LABEL[c]}</button>
+      `).join('')}
+    </div>
+  `;
 }
 
 // after deleting a log entry, reconcile collection state with remaining log
@@ -1877,6 +1964,7 @@ function reconcileCollection() {
       date: e.date,
       location: e.location,
       notes: e.notes,
+      cat: e.cat || 'salt',   // category of the most recent entry under this name
     };
   }
 }
@@ -1940,7 +2028,7 @@ function renderHome() {
   return `
     <div class="home-wrap">
       <div class="logo">FISHDEX</div>
-      <div class="logo-sub">FLORIDA SALTWATER EDITION</div>
+      <div class="logo-sub">FLORIDA EDITION</div>
       <div class="home-buttons">
         <button class="bubble-btn newfish" data-nav="newfish">
           NEW FISH!
@@ -1965,25 +2053,27 @@ function renderHome() {
 }
 
 function renderCollection() {
-  const totalCaught = Object.keys(state.catches).length;
+  const tabFish = FISH.filter(f => fishCat(f) === catTab);
+  const tabCaught = tabFish.filter(f => caughtFor(f.id)).length;
   let html = `
     <div class="scr-header">
       <div class="scr-title">COLLECTION</div>
       <button class="back-btn" data-nav="home">←</button>
     </div>
+    ${renderCatTabs()}
     <div class="stats-bar">
       <span>CAUGHT</span>
-      <strong>${totalCaught} / ${FISH.length}</strong>
+      <strong>${tabCaught} / ${tabFish.length}</strong>
     </div>
   `;
   for (const r of RARITIES) {
-    const fishOfRarity = FISH.filter(f => f.rarity === r);
+    const fishOfRarity = FISH.filter(f => f.rarity === r && fishCat(f) === catTab);
     if (!fishOfRarity.length) continue;
     html += `
       <div class="rarity-section">
         <div class="rarity-header ${r}">
           <span>${RARITY_LABEL[r]}</span>
-          <span class="count">${rarityCount(r)}</span>
+          <span class="count">${rarityCount(r, catTab)}</span>
         </div>
         <div class="grid">
           ${fishOfRarity.map(f => renderCard(f)).join('')}
@@ -1991,9 +2081,10 @@ function renderCollection() {
       </div>
     `;
   }
-  // Unlisted section — only renders if there's at least one entry. Hidden until
-  // discovered. Each Unlisted name gets its own card, mirrors the real-fish layout.
-  const unlistedKeys = Object.keys(state.unlisted || {});
+  // Unlisted section — only the unlisted catches in the active category. Hidden
+  // until discovered. Each Unlisted name gets its own card.
+  const unlistedKeys = Object.keys(state.unlisted || {})
+    .filter(k => (state.unlisted[k].cat || 'salt') === catTab);
   if (unlistedKeys.length) {
     html += `
       <div class="rarity-section">
@@ -2075,15 +2166,17 @@ function renderCard(f) {
 }
 
 function renderNewFish() {
+  const tabFish = FISH.filter(f => fishCat(f) === catTab);
   return `
     <div class="book-page">
       <div class="scr-header">
         <div class="scr-title">NICE CATCH!</div>
         <button class="back-btn" data-nav="home">←</button>
       </div>
+      ${renderCatTabs()}
       <p class="newfish-hint">Tap the fish you reeled in 🎣</p>
       <div class="grid dense">
-        ${FISH.map(f => `
+        ${tabFish.map(f => `
           <div class="card flat r-${f.rarity}" data-fish="${f.id}" data-action="open-modal">
             <div class="card-inner">
               <div class="card-face card-front">
@@ -2125,11 +2218,12 @@ function renderLog() {
       const displayName = entry.unlistedName
         || (state.unlisted[norm] && state.unlisted[norm].name)
         || norm.replace(/\b\w/g, c => c.toUpperCase());
+      const uCat = entry.cat || (state.unlisted[norm] && state.unlisted[norm].cat) || 'salt';
       return `
         <div class="log-entry r-unlisted">
           <img class="pixel unlisted-placeholder" decoding="async" src="fish/bonito.webp" alt="Unlisted catch">
           <div class="meta">
-            <h3>${escapeHtml(displayName)}</h3>
+            <h3>${escapeHtml(displayName)}<span class="cat-pill ${uCat}">${CAT_LABEL[uCat]}</span></h3>
             <div class="when">${fmtDate(entry.date)} · Unlisted</div>
             ${entry.location ? `<div class="where">${escapeHtml(entry.location)}</div>` : ''}
             ${entry.notes ? `<div class="notes">"${escapeHtml(entry.notes)}"</div>` : ''}
@@ -2147,7 +2241,7 @@ function renderLog() {
       <div class="log-entry r-${f.rarity}">
         <img class="pixel" loading="lazy" decoding="async" src="${f.img}" alt="${f.name}">
         <div class="meta">
-          <h3>${f.name}</h3>
+          <h3>${f.name}<span class="cat-pill ${fishCat(f)}">${CAT_LABEL[fishCat(f)]}</span></h3>
           <div class="when">${fmtDate(entry.date)}</div>
           ${entry.location ? `<div class="where">${escapeHtml(entry.location)}</div>` : ''}
           ${entry.notes ? `<div class="notes">"${escapeHtml(entry.notes)}"</div>` : ''}
@@ -2225,6 +2319,13 @@ function renderEditModal(entryId) {
           <label>Fish name</label>
           <input type="text" id="e-name" maxlength="40" autocomplete="off" value="${escapeHtml(displayName)}">
         </div>
+        <div class="field-block">
+          <label>Water</label>
+          <div class="cat-tabs seg" data-cat-seg>
+            <button type="button" class="cat-tab ${(entry.cat || 'salt') === 'salt' ? 'active' : ''}" data-cat-opt="salt">Saltwater</button>
+            <button type="button" class="cat-tab ${(entry.cat || 'salt') === 'fresh' ? 'active' : ''}" data-cat-opt="fresh">Freshwater</button>
+          </div>
+        </div>
       ` : ''}
       <div class="field-block">
         <label>Date</label>
@@ -2244,6 +2345,10 @@ function renderEditModal(entryId) {
   wrapper.addEventListener('click', e => {
     if (!e.target.closest('[data-stop]')) wrapper.remove();
   });
+  wrapper.querySelectorAll('[data-cat-opt]').forEach(b => b.addEventListener('click', () => {
+    wrapper.querySelectorAll('[data-cat-opt]').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  }));
   wrapper.querySelector('#e-save').addEventListener('click', async () => {
     const date = wrapper.querySelector('#e-date').value || todayISO();
     const location = wrapper.querySelector('#e-loc').value.trim();
@@ -2257,11 +2362,14 @@ function renderEditModal(entryId) {
         const norm = normalizeName(newName);
         const realByName = realFishByName();
         const realId = realByName[norm];
+        const activeOpt = wrapper.querySelector('[data-cat-opt].active');
+        const selCat = activeOpt ? activeOpt.dataset.catOpt : 'salt';
         log[idx] = {
           ...log[idx],
           date, location, notes,
           fishId: realId || ('unlisted:' + norm),
           unlistedName: realId ? undefined : newName,
+          cat: realId ? undefined : selCat,
         };
       } else {
         log[idx] = { ...log[idx], date, location, notes };
@@ -2335,6 +2443,7 @@ function renderModal() {
     modalFishId = null;
     wrapper.remove();
     toast(`${f.name} logged! 🎣`);
+    catTab = fishCat(f);
     view = 'collection';
     render();
   });
@@ -2365,6 +2474,13 @@ function renderUnlistedModal() {
         <input type="text" id="u-name" placeholder="e.g. Wahoo" maxlength="40" autocomplete="off">
       </div>
       <div class="field-block">
+        <label>Water</label>
+        <div class="cat-tabs seg" data-cat-seg>
+          <button type="button" class="cat-tab ${catTab === 'salt' ? 'active' : ''}" data-cat-opt="salt">Saltwater</button>
+          <button type="button" class="cat-tab ${catTab === 'fresh' ? 'active' : ''}" data-cat-opt="fresh">Freshwater</button>
+        </div>
+      </div>
+      <div class="field-block">
         <label>Date</label>
         <input type="date" id="u-date" value="${todayISO()}">
       </div>
@@ -2382,6 +2498,10 @@ function renderUnlistedModal() {
   wrapper.addEventListener('click', e => {
     if (!e.target.closest('[data-stop]')) wrapper.remove();
   });
+  wrapper.querySelectorAll('[data-cat-opt]').forEach(b => b.addEventListener('click', () => {
+    wrapper.querySelectorAll('[data-cat-opt]').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  }));
   wrapper.querySelector('#u-save').addEventListener('click', async () => {
     const rawName = wrapper.querySelector('#u-name').value.trim();
     if (!rawName) {
@@ -2397,11 +2517,14 @@ function renderUnlistedModal() {
     // typed the name of a fish that IS in the dex — don't create an Unlisted).
     const realByName = realFishByName();
     const realId = realByName[norm];
+    const activeOpt = wrapper.querySelector('[data-cat-opt].active');
+    const selCat = activeOpt ? activeOpt.dataset.catOpt : 'salt';
 
     log.push({
       id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
       fishId: realId || ('unlisted:' + norm),
       unlistedName: realId ? undefined : rawName,
+      cat: realId ? undefined : selCat,
       date, location, notes
     });
     reconcileCollection();
@@ -2409,6 +2532,7 @@ function renderUnlistedModal() {
     await Promise.all([saveState(), saveLog()]);
     wrapper.remove();
     toast(realId ? `${rawName} logged! 🎣` : `Unlisted ${rawName} logged 🎣`);
+    catTab = realId ? fishCat(FISH.find(x => x.id === realId)) : selCat;
     view = 'collection';
     render();
   });
@@ -2416,6 +2540,16 @@ function renderUnlistedModal() {
 }
 
 function bindEvents() {
+  document.querySelectorAll('[data-cat-tab]').forEach(el => {
+    el.addEventListener('click', () => {
+      const c = el.dataset.catTab;
+      if (c === catTab) return;
+      catTab = c;
+      flippedCard = null;
+      render();
+      window.scrollTo(0, 0);
+    });
+  });
   document.querySelectorAll('[data-nav]').forEach(el => {
     el.addEventListener('click', () => {
       view = el.dataset.nav;
