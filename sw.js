@@ -2,7 +2,7 @@
 // To force users onto a new build: bump CACHE_VERSION below.
 // On activate, old caches are deleted automatically.
 
-const CACHE_VERSION = 'fishdex-v27';
+const CACHE_VERSION = 'fishdex-v28';
 
 // Fish sprites — kept as a list so it's clear what gets precached. If you add
 // new fish to the FISH array in index.html, add the new id here too (or rely
@@ -42,13 +42,30 @@ const PRECACHE = [
   ...FISH_IDS.map(id => `fish/${id}.webp`)
 ];
 
+// Map library (Leaflet + markercluster), self-hosted in lib/. Cached best-effort
+// so a missing file never fails the whole install — the map still streams online.
+const LIB = [
+  'lib/leaflet/leaflet.js',
+  'lib/leaflet/leaflet.css',
+  'lib/leaflet/leaflet.markercluster.js',
+  'lib/leaflet/MarkerCluster.css',
+  'lib/leaflet/MarkerCluster.Default.css',
+];
+
+// Online map tile hosts — never cached (would balloon the cache with thousands
+// of tiles). These stream from the network; offline shows blank tiles.
+const TILE_HOSTS = ['openstreetmap.org', 'arcgisonline.com'];
+
 // Install: precache the app shell + all fish sprites so the app works fully
 // offline immediately after install. If a sprite isn't in PRECACHE, the fetch
 // handler below will cache it on first successful network load.
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_VERSION)
-      .then(cache => cache.addAll(PRECACHE))
+      .then(async cache => {
+        await cache.addAll(PRECACHE);                      // core shell — must succeed
+        await Promise.allSettled(LIB.map(u => cache.add(u))); // map libs — best-effort
+      })
       .then(() => self.skipWaiting())
   );
 });
@@ -89,6 +106,9 @@ self.addEventListener('fetch', event => {
       })
     );
   } else {
+    // Online map tiles: don't intercept or cache — let the browser fetch them
+    // directly so they never accumulate in the cache.
+    if (TILE_HOSTS.some(h => url.hostname.endsWith(h))) return;
     // Cross-origin (fonts): try network, fall back to cache
     event.respondWith(
       fetch(req).then(resp => {
