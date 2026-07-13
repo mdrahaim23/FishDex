@@ -1612,7 +1612,7 @@
   /* === THEMES BUBBLE (home, top-right) === */
   .themes-bubble {
     position: absolute;
-    top: 32px;
+    top: 40px;
     right: 16px;
     display: inline-flex;
     align-items: center;
@@ -1873,6 +1873,95 @@
   .backfill-name { font-family: 'Bungee', sans-serif; font-size: 13px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .backfill-date { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
   .backfill-go { font-size: 12px; font-weight: 800; color: #b45309; flex-shrink: 0; }
+  /* Map filter button (header) + filter sheet */
+  .map-header .scr-title { flex: 0 1 auto; }   /* let Filter sit in the gap */
+  .map-filter-btn {
+    flex-shrink: 0;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--foam);
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.35);
+    backdrop-filter: blur(8px);
+    padding: 9px 16px;
+    border-radius: 22px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .map-filter-btn:active { background: rgba(255,255,255,0.3); transform: translateY(1px); }
+  .filter-head-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .filter-clear {
+    flex-shrink: 0;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    color: #b45309;
+    background: rgba(180,83,9,0.10);
+    border: 1px solid rgba(180,83,9,0.35);
+    padding: 7px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .filter-clear:active { background: rgba(180,83,9,0.2); }
+  .filter-scroll { max-height: 52vh; overflow-y: auto; margin-top: 4px; }
+  .filter-sec-head {
+    font-family: 'Bungee', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--ink-soft);
+    margin: 12px 2px 8px;
+  }
+  .filter-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    text-align: left;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1.5px solid var(--paper-edge);
+    background: rgba(160,120,60,0.06);
+    cursor: pointer;
+  }
+  .filter-row.on {
+    border-color: #b45309;
+    background: rgba(180,83,9,0.12);
+  }
+  .filter-check {
+    width: 18px; height: 18px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    border: 1.5px solid var(--paper-edge);
+    background: #fff;
+    color: #b45309;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 16px;
+    text-align: center;
+  }
+  .filter-row.on .filter-check { border-color: #b45309; background: #ffe7c4; }
+  .filter-row img { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; }
+  .filter-name {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 </style>
 
 
@@ -1983,6 +2072,8 @@ let mapInstance = null;   // live Leaflet map (destroyed/recreated on nav)
 let clusterGroup = null;  // live markercluster layer
 let mapPickTarget = null; // in pick mode: what we're placing a point for {kind, ...}
 let mapPickLatLng = null; // the point tapped in pick mode (before Confirm)
+let lastPickLatLng = null; // remembers the last confirmed spot, to seed the next pin
+let mapFilter = new Set(); // fish ids to show; empty = show all. Resets when leaving the map.
 let catchDraft = null;    // prefill for renderModal after returning from a map pick
 let unlistedDraft = null; // prefill for renderUnlistedModal after a map pick
 let editDraft = null;     // prefill for renderEditModal after a map pick
@@ -2953,6 +3044,9 @@ function renderMap() {
     <div class="map-screen">
       <div class="scr-header map-header">
         <div class="scr-title">MAP</div>
+        ${!picking
+          ? `<button class="map-filter-btn" data-action="open-filter">${mapFilter.size ? `Filter · ${mapFilter.size}` : 'Filter'}</button>`
+          : ''}
         ${picking
           ? `<button class="back-btn" data-action="pick-cancel">←</button>`
           : `<button class="back-btn" data-nav="home">←</button>`}
@@ -3066,6 +3160,125 @@ function refreshPinLabels() {
   });
 }
 
+// (Re)draw the pins into the cluster layer, honoring the active fish filter.
+// Catches sharing an exact coordinate are fanned into a tiny ring so zooming
+// in separates them into distinct, individually-tappable pins.
+function buildPins(fit) {
+  if (!mapInstance || !clusterGroup) return;
+  clusterGroup.clearLayers();
+  mapMarkers = [];
+  const bounds = [];
+  const SPREAD = 0.00011; // ~12m ring radius
+  const groups = {};
+  locatedCatches().forEach(e => {
+    if (mapFilter.size && !mapFilter.has(e.fishId)) return;   // filtered out
+    const k = e.lat.toFixed(6) + ',' + e.lng.toFixed(6);
+    (groups[k] = groups[k] || []).push(e);
+  });
+  Object.values(groups).forEach(grp => {
+    grp.forEach((entry, i) => {
+      let plat = entry.lat, plng = entry.lng;
+      if (grp.length > 1) {
+        const ang = (2 * Math.PI * i) / grp.length;
+        plat += SPREAD * Math.sin(ang);
+        plng += SPREAD * Math.cos(ang) / Math.cos(entry.lat * Math.PI / 180);
+      }
+      const d = catchPinData(entry);
+      const marker = L.marker([plat, plng], {
+        icon: pinIcon(d.unlisted ? PIN_UNLISTED_COLOR : (RARITY_PIN[d.rarity] || PIN_COLOR)),
+      });
+      marker._fishLabel = `${escapeHtml(d.name)} · ${fmtDate(entry.date)}`;
+      marker.bindPopup(pinPopupHtml(entry, d), { className: 'fishdex-popup' });
+      marker.on('popupopen', wirePinPopup);
+      marker.bindTooltip(escapeHtml(d.name), {
+        permanent: true, direction: 'top', offset: [0, -32],
+        className: 'pin-label', opacity: 1,
+      });
+      marker.closeTooltip();
+      clusterGroup.addLayer(marker);
+      mapMarkers.push(marker);
+      bounds.push([plat, plng]);
+    });
+  });
+  if (fit && bounds.length) mapInstance.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+  refreshPinLabels();
+}
+
+// Filter sheet: pick which fish to show. Selections apply live; dismissing the
+// sheet without applying (tap away / ✕) clears the filter back to all fish.
+function openFilterSheet() {
+  let filterTab = (catTab === 'fresh') ? 'fresh' : 'salt';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'modal-bg';
+  const rowsHtml = (cat) => {
+    const fishes = FISH.filter(f => fishCat(f) === cat);
+    if (!fishes.length) return `<div class="log-empty">No ${cat === 'fresh' ? 'freshwater' : 'saltwater'} fish yet.</div>`;
+    return fishes.map(f => `
+      <button type="button" class="filter-row ${mapFilter.has(f.id) ? 'on' : ''}" data-filter-fish="${f.id}">
+        <span class="filter-check">${mapFilter.has(f.id) ? '✓' : ''}</span>
+        <img class="pixel" decoding="async" src="${f.img}" alt="">
+        <span class="filter-name">${f.name}</span>
+      </button>
+    `).join('');
+  };
+  wrapper.innerHTML = `
+    <div class="modal filter-modal" data-stop="1">
+      <div class="modal-grip"></div>
+      <div class="filter-head-row">
+        <h2 class="backfill-title">Filter pins</h2>
+        <button type="button" class="filter-clear" data-filter-clear>Show all</button>
+      </div>
+      <div class="prev-catch">Tap fish to show only those. Dismiss to reset to all.</div>
+      <div class="cat-tabs seg">
+        <button type="button" class="cat-tab ${filterTab === 'salt' ? 'active' : ''}" data-filter-tab="salt">Saltwater</button>
+        <button type="button" class="cat-tab ${filterTab === 'fresh' ? 'active' : ''}" data-filter-tab="fresh">Freshwater</button>
+      </div>
+      <div class="filter-scroll"><div class="filter-list" data-filter-list>${rowsHtml(filterTab)}</div></div>
+      <button type="button" class="save-btn" data-filter-apply>Apply filter</button>
+    </div>
+  `;
+  const listEl = wrapper.querySelector('[data-filter-list]');
+  const renderList = () => { listEl.innerHTML = rowsHtml(filterTab); };
+  const updateBtn = () => {
+    const fb = document.querySelector('.map-filter-btn');
+    if (fb) fb.textContent = mapFilter.size ? `Filter · ${mapFilter.size}` : 'Filter';
+  };
+  // Dismiss without applying → reset to all fish.
+  wrapper.addEventListener('click', e => {
+    if (!e.target.closest('[data-stop]')) {
+      mapFilter.clear();
+      buildPins(false);
+      updateBtn();
+      wrapper.remove();
+    }
+  });
+  wrapper.querySelectorAll('[data-filter-tab]').forEach(b => b.addEventListener('click', () => {
+    filterTab = b.dataset.filterTab;
+    wrapper.querySelectorAll('[data-filter-tab]').forEach(x => x.classList.toggle('active', x === b));
+    renderList();
+  }));
+  // Delegate row taps (rows are re-rendered on tab switch).
+  listEl.addEventListener('click', e => {
+    const row = e.target.closest('[data-filter-fish]');
+    if (!row) return;
+    const id = row.dataset.filterFish;
+    if (mapFilter.has(id)) mapFilter.delete(id); else mapFilter.add(id);
+    const on = mapFilter.has(id);
+    row.classList.toggle('on', on);
+    row.querySelector('.filter-check').textContent = on ? '✓' : '';
+    buildPins(false);
+    updateBtn();
+  });
+  wrapper.querySelector('[data-filter-clear]').addEventListener('click', () => {
+    mapFilter.clear();
+    renderList();
+    buildPins(false);
+    updateBtn();
+  });
+  wrapper.querySelector('[data-filter-apply]').addEventListener('click', () => wrapper.remove());
+  document.body.appendChild(wrapper);
+}
+
 function initMap() {
   const el = document.getElementById('map-canvas');
   if (!el || typeof L === 'undefined') return;
@@ -3090,28 +3303,7 @@ function initMap() {
     zoomToBoundsOnClick: false,
     spiderfyOnMaxZoom: false,
     showCoverageOnHover: false,
-    maxClusterRadius: 45,
-  });
-
-  const bounds = [];
-  mapMarkers = [];
-  locatedCatches().forEach(entry => {
-    const d = catchPinData(entry);
-    const marker = L.marker([entry.lat, entry.lng], {
-      icon: pinIcon(d.unlisted ? PIN_UNLISTED_COLOR : (RARITY_PIN[d.rarity] || PIN_COLOR)),
-    });
-    marker._fishLabel = `${escapeHtml(d.name)} · ${fmtDate(entry.date)}`;
-    marker.bindPopup(pinPopupHtml(entry, d), { className: 'fishdex-popup' });
-    marker.on('popupopen', wirePinPopup);
-    // Name banner — shown only when zoomed in (see refreshPinLabels).
-    marker.bindTooltip(escapeHtml(d.name), {
-      permanent: true, direction: 'top', offset: [0, -32],
-      className: 'pin-label', opacity: 1,
-    });
-    marker.closeTooltip();
-    clusterGroup.addLayer(marker);
-    mapMarkers.push(marker);
-    bounds.push([entry.lat, entry.lng]);
+    maxClusterRadius: 30,
   });
 
   // Tap a cluster → bubble listing every fish caught in that group.
@@ -3128,16 +3320,13 @@ function initMap() {
   // Name banners appear at high zoom; recompute as clusters form / dissolve.
   mapInstance.on('zoomend', refreshPinLabels);
   clusterGroup.on('animationend', refreshPinLabels);
-  refreshPinLabels();
 
-  if (bounds.length && mapMode !== 'pick') {
-    mapInstance.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-  }
+  buildPins(mapMode !== 'pick');
 
   // Pick mode: a draggable pin is dropped immediately so "Confirm" is always
   // available. Tap the map or drag the pin to adjust, then Confirm.
   if (mapMode === 'pick') {
-    let startLL = mapInstance.getCenter();
+    let startLL = null;
     const t = mapPickTarget;
     if (t && (t.kind === 'existing' || t.kind === 'edit')) {
       const e = log.find(x => x.id === t.entryId);
@@ -3145,6 +3334,9 @@ function initMap() {
     } else if (t && t.draft && typeof t.draft.lat === 'number' && typeof t.draft.lng === 'number') {
       startLL = L.latLng(t.draft.lat, t.draft.lng);
     }
+    // No coords on this catch yet → start where the last pin was placed.
+    if (!startLL && lastPickLatLng) startLL = L.latLng(lastPickLatLng.lat, lastPickLatLng.lng);
+    if (!startLL) startLL = mapInstance.getCenter();
     mapInstance.setView(startLL, Math.max(mapInstance.getZoom(), 15));
     mapPickLatLng = startLL;
     const pickMarker = L.marker(startLL, {
@@ -3183,6 +3375,7 @@ function startPickForExisting(entryId) {
 async function confirmPick() {
   if (!mapPickLatLng || !mapPickTarget) { toast('Tap the map to drop a pin first'); return; }
   const { lat, lng } = mapPickLatLng;
+  lastPickLatLng = { lat, lng };   // seed the next placement here
   const t = mapPickTarget;
   mapMode = 'browse';
   mapPickTarget = null;
@@ -3328,6 +3521,7 @@ function bindEvents() {
       mapMode = 'browse';
       mapPickTarget = null;
       mapPickLatLng = null;
+      mapFilter.clear();
       if (view !== 'collection') recentlyCaught.clear();
       render();
       window.scrollTo(0, 0);
@@ -3369,6 +3563,9 @@ function bindEvents() {
   });
   document.querySelectorAll('[data-action="open-backfill"]').forEach(el => {
     el.addEventListener('click', openBackfillDrawer);
+  });
+  document.querySelectorAll('[data-action="open-filter"]').forEach(el => {
+    el.addEventListener('click', openFilterSheet);
   });
   document.querySelectorAll('[data-edit]').forEach(el => {
     el.addEventListener('click', (ev) => {
@@ -3437,6 +3634,7 @@ function bindEvents() {
         mapMode = 'browse';
         mapPickTarget = null;
         mapPickLatLng = null;
+        mapFilter.clear();
         view = 'home';
         flippedCard = null;
         recentlyCaught.clear();
