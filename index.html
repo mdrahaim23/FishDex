@@ -1627,7 +1627,7 @@
   /* === THEMES BUBBLE (home, top-right) === */
   .themes-bubble {
     position: absolute;
-    top: 40px;
+    top: 26px;
     right: 16px;
     display: inline-flex;
     align-items: center;
@@ -1998,39 +1998,44 @@
     animation-iteration-count: infinite;
     will-change: transform, opacity;
   }
+  .swim-body {
+    transform: scaleX(var(--face, 1));   /* face direction of travel */
+    transform-origin: center;
+  }
   .swim-img {
     display: block;
     height: auto;
-    opacity: 0.85;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));
-    transform: scaleX(var(--face, 1));
+    transform-origin: 0% 50%;            /* pivot at the head → tail whips */
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25)) blur(var(--swim-blur, 0px));
     animation-name: swim-wag;
     animation-timing-function: ease-in-out;
     animation-iteration-count: infinite;
-    animation-direction: alternate;
     will-change: transform;
   }
+  /* Drift = S-curve path + banking into the turns; opacity peak varies by depth */
   @keyframes swim-right {
-    0%   { transform: translateX(-25%) translateY(0);   opacity: 0; }
-    8%   { opacity: 1; }
-    25%  { transform: translateX(12%)  translateY(-12px); }
-    50%  { transform: translateX(50%)  translateY(9px); }
-    75%  { transform: translateX(88%)  translateY(-9px); }
-    92%  { opacity: 1; }
-    100% { transform: translateX(125%) translateY(0);   opacity: 0; }
+    0%   { transform: translateX(-25%) translateY(0)     rotate(0deg);   opacity: 0; }
+    8%   { opacity: var(--swim-peak, 0.9); }
+    25%  { transform: translateX(12%)  translateY(-22px) rotate(-6deg); }
+    50%  { transform: translateX(50%)  translateY(15px)  rotate(6deg); }
+    75%  { transform: translateX(88%)  translateY(-16px) rotate(-5deg); }
+    92%  { opacity: var(--swim-peak, 0.9); }
+    100% { transform: translateX(125%) translateY(0)     rotate(0deg);   opacity: 0; }
   }
   @keyframes swim-left {
-    0%   { transform: translateX(125%) translateY(0);   opacity: 0; }
-    8%   { opacity: 1; }
-    25%  { transform: translateX(88%)  translateY(-12px); }
-    50%  { transform: translateX(50%)  translateY(9px); }
-    75%  { transform: translateX(12%)  translateY(-9px); }
-    92%  { opacity: 1; }
-    100% { transform: translateX(-25%) translateY(0);   opacity: 0; }
+    0%   { transform: translateX(125%) translateY(0)     rotate(0deg);   opacity: 0; }
+    8%   { opacity: var(--swim-peak, 0.9); }
+    25%  { transform: translateX(88%)  translateY(-22px) rotate(6deg); }
+    50%  { transform: translateX(50%)  translateY(15px)  rotate(-6deg); }
+    75%  { transform: translateX(12%)  translateY(-16px) rotate(5deg); }
+    92%  { opacity: var(--swim-peak, 0.9); }
+    100% { transform: translateX(-25%) translateY(0)     rotate(0deg);   opacity: 0; }
   }
+  /* Tail beat: quick flick, slow glide (asymmetric), pivoting at the head */
   @keyframes swim-wag {
-    0%   { transform: scaleX(var(--face, 1)) skewX(-4deg) scaleY(1.02); }
-    100% { transform: scaleX(var(--face, 1)) skewX(4deg)  scaleY(0.98); }
+    0%   { transform: skewY(-3.5deg); }
+    35%  { transform: skewY(4deg); }
+    100% { transform: skewY(-3.5deg); }
   }
   @media (prefers-reduced-motion: reduce) {
     .swim-layer { display: none; }
@@ -2484,7 +2489,8 @@ const FISH_SIZE = {
   jack_crevalle: 150, redfish: 150, snook: 160, barracuda: 165, houndfish: 170,
   black_drum: 200, gag_grouper: 200, shark: 275, tarpon: 300, goliath_grouper: 300,
 };
-const SWIM_BASE_PX = 52;   // width at 100%
+const SWIM_BASE_PX = 66;   // width at 100%
+const SWIM_EXP = 0.6;      // <1: lifts small fish, compresses the 200–300% giants
 
 // Favorited catches drift across the home screen. Unique by image so we don't
 // render the same species twice; capped for performance on slower devices.
@@ -2500,19 +2506,26 @@ function swimLayerHtml() {
     picks.push({ img: d.img, id: e.fishId });
   });
   if (!picks.length) return '';
-  const BASE_FACES_RIGHT = true;   // flip this if the sprites face left
+  const BASE_FACES_RIGHT = false;   // sprites face left, so flip accordingly
   return `<div class="swim-layer" aria-hidden="true">` + picks.slice(0, 10).map(p => {
     const dir   = Math.random() < 0.5 ? 'right' : 'left';
-    const top   = Math.round(6 + Math.random() * 80);       // vertical %
-    const dur   = (15 + Math.random() * 16).toFixed(1);     // seconds to cross
+    const depth = Math.random();                            // 0 far … 1 near
+    const top   = Math.round(6 + Math.random() * 78);       // vertical %
+    const dur   = (13 + (1 - depth) * 13 + Math.random() * 4).toFixed(1); // far = slower
     const delay = (-Math.random() * dur).toFixed(1);        // start mid-flight
-    const wag   = (1.1 + Math.random() * 0.9).toFixed(2);
+    const wag   = (0.9 + Math.random() * 0.7).toFixed(2);   // tail-beat period
+    const wagDelay = (-Math.random() * 2).toFixed(2);       // desync tails
     const pct   = FISH_SIZE[p.id] || 100;                   // species scale
     const vary  = 0.85 + Math.random() * 0.30;              // ±15% within species
-    const w     = Math.max(11, Math.round(SWIM_BASE_PX * (pct / 100) * vary));
+    const sizeMul = 0.72 + depth * 0.5;                     // near = bigger
+    const w     = Math.max(12, Math.round(SWIM_BASE_PX * Math.pow(pct / 100, SWIM_EXP) * vary * sizeMul));
+    const peak  = (0.5 + depth * 0.45).toFixed(2);          // near = more opaque
+    const blur  = ((1 - depth) * 0.8).toFixed(2);           // far = softer
     const face  = ((dir === 'right') === BASE_FACES_RIGHT) ? 1 : -1;
-    return `<div class="swim-fish" style="top:${top}%;animation-name:swim-${dir};animation-duration:${dur}s;animation-delay:${delay}s;">`
-         + `<img class="swim-img" src="${p.img}" alt="" style="--face:${face};width:${w}px;animation-duration:${wag}s;"></div>`;
+    return `<div class="swim-fish" style="top:${top}%;--swim-peak:${peak};animation-name:swim-${dir};animation-duration:${dur}s;animation-delay:${delay}s;">`
+         + `<div class="swim-body" style="--face:${face};">`
+         + `<img class="swim-img" src="${p.img}" alt="" style="width:${w}px;--swim-blur:${blur}px;animation-duration:${wag}s;animation-delay:${wagDelay}s;">`
+         + `</div></div>`;
   }).join('') + `</div>`;
 }
 
