@@ -2,7 +2,7 @@
 // To force users onto a new build: bump CACHE_VERSION below.
 // On activate, old caches are deleted automatically.
 
-const CACHE_VERSION = 'fishdex-v36';
+const CACHE_VERSION = 'fishdex-v37';
 
 // Fish sprites — kept as a list so it's clear what gets precached. If you add
 // new fish to the FISH array in index.html, add the new id here too (or rely
