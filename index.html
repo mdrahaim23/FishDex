@@ -1449,6 +1449,21 @@
   .log-entry .del:active { background: rgba(239, 68, 68, 0.3); }
   .log-entry .edit:hover { background: rgba(59, 130, 246, 0.15); color: #1d4ed8; }
   .log-entry .edit:active { background: rgba(59, 130, 246, 0.3); }
+  .log-entry .fav {
+    background: rgba(0,0,0,0.05);
+    border: none;
+    font-size: 16px;
+    color: rgba(0,0,0,0.35);
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s, transform 0.15s;
+  }
+  .log-entry .fav:hover { background: rgba(236, 72, 153, 0.12); color: #db2777; }
+  .log-entry .fav.on { color: #e5484d; }
+  .log-entry .fav.on:hover { background: rgba(229, 72, 77, 0.14); }
+  .log-entry .fav:active { transform: scale(1.25); }
 
   .toast {
     position: fixed;
@@ -1962,6 +1977,64 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* === Favorited fish swimming across home === */
+  .home-wrap { position: relative; }
+  .home-wrap > .logo,
+  .home-wrap > .logo-sub,
+  .home-wrap > .home-buttons,
+  .home-wrap > .footer-cred { position: relative; z-index: 1; }
+  .swim-layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .swim-fish {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    will-change: transform, opacity;
+  }
+  .swim-img {
+    display: block;
+    height: auto;
+    opacity: 0.85;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));
+    transform: scaleX(var(--face, 1));
+    animation-name: swim-wag;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    will-change: transform;
+  }
+  @keyframes swim-right {
+    0%   { transform: translateX(-25%) translateY(0);   opacity: 0; }
+    8%   { opacity: 1; }
+    25%  { transform: translateX(12%)  translateY(-12px); }
+    50%  { transform: translateX(50%)  translateY(9px); }
+    75%  { transform: translateX(88%)  translateY(-9px); }
+    92%  { opacity: 1; }
+    100% { transform: translateX(125%) translateY(0);   opacity: 0; }
+  }
+  @keyframes swim-left {
+    0%   { transform: translateX(125%) translateY(0);   opacity: 0; }
+    8%   { opacity: 1; }
+    25%  { transform: translateX(88%)  translateY(-12px); }
+    50%  { transform: translateX(50%)  translateY(9px); }
+    75%  { transform: translateX(12%)  translateY(-9px); }
+    92%  { opacity: 1; }
+    100% { transform: translateX(-25%) translateY(0);   opacity: 0; }
+  }
+  @keyframes swim-wag {
+    0%   { transform: scaleX(var(--face, 1)) skewX(-4deg) scaleY(1.02); }
+    100% { transform: scaleX(var(--face, 1)) skewX(4deg)  scaleY(0.98); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .swim-layer { display: none; }
+  }
 </style>
 
 
@@ -2400,11 +2473,55 @@ function forceDecodeImages() {
   });
 }
 
+// Relative on-screen size per species (100% = default medium), so a tarpon
+// dwarfs a baitfish. Each fish also varies ±15% within its species.
+const FISH_SIZE = {
+  baitfish: 15, bluegill: 35, silver_perch: 45, pufferfish: 45, catfish: 70,
+  whiting: 70, pompano: 70, mangrove_snapper: 75, smallmouth_bass: 80,
+  largemouth_bass: 85, flounder: 85, sheepshead: 85, ladyfish: 90, needlefish: 95,
+  speckled_seatrout: 100, weakfish: 105, bluefish: 110, tripletail: 120,
+  red_snapper: 120, spanish_mackerel: 125, bonito: 130, permit: 145,
+  jack_crevalle: 150, redfish: 150, snook: 160, barracuda: 165, houndfish: 170,
+  black_drum: 200, gag_grouper: 200, shark: 275, tarpon: 300, goliath_grouper: 300,
+};
+const SWIM_BASE_PX = 52;   // width at 100%
+
+// Favorited catches drift across the home screen. Unique by image so we don't
+// render the same species twice; capped for performance on slower devices.
+// Direction, height, speed, delay and size are randomized so they desync,
+// and each fish is scaled to its species' relative size.
+function swimLayerHtml() {
+  const seen = new Set();
+  const picks = [];
+  log.filter(e => e.fav).forEach(e => {
+    const d = catchPinData(e);
+    if (seen.has(d.img)) return;
+    seen.add(d.img);
+    picks.push({ img: d.img, id: e.fishId });
+  });
+  if (!picks.length) return '';
+  const BASE_FACES_RIGHT = true;   // flip this if the sprites face left
+  return `<div class="swim-layer" aria-hidden="true">` + picks.slice(0, 10).map(p => {
+    const dir   = Math.random() < 0.5 ? 'right' : 'left';
+    const top   = Math.round(6 + Math.random() * 80);       // vertical %
+    const dur   = (15 + Math.random() * 16).toFixed(1);     // seconds to cross
+    const delay = (-Math.random() * dur).toFixed(1);        // start mid-flight
+    const wag   = (1.1 + Math.random() * 0.9).toFixed(2);
+    const pct   = FISH_SIZE[p.id] || 100;                   // species scale
+    const vary  = 0.85 + Math.random() * 0.30;              // ±15% within species
+    const w     = Math.max(11, Math.round(SWIM_BASE_PX * (pct / 100) * vary));
+    const face  = ((dir === 'right') === BASE_FACES_RIGHT) ? 1 : -1;
+    return `<div class="swim-fish" style="top:${top}%;animation-name:swim-${dir};animation-duration:${dur}s;animation-delay:${delay}s;">`
+         + `<img class="swim-img" src="${p.img}" alt="" style="--face:${face};width:${w}px;animation-duration:${wag}s;"></div>`;
+  }).join('') + `</div>`;
+}
+
 function renderHome() {
   const totalCaught = Object.keys(state.catches).length;
   const pinCount = log.filter(e => typeof e.lat === 'number' && typeof e.lng === 'number').length;
   return `
     <div class="home-wrap">
+      ${swimLayerHtml()}
       <button class="themes-bubble" data-nav="shop" aria-label="Themes"><span class="tb-label">Themes</span></button>
       <div class="logo">FISHDEX</div>
       <div class="logo-sub">FLORIDA EDITION</div>
@@ -2608,6 +2725,7 @@ function renderLog() {
             ${entry.notes ? `<div class="notes">"${escapeHtml(entry.notes)}"</div>` : ''}
           </div>
           <div class="actions">
+            <button class="fav ${entry.fav ? 'on' : ''}" data-fav="${entry.id}" title="Favorite" aria-label="Favorite">${entry.fav ? '♥' : '♡'}</button>
             <button class="edit" data-edit="${entry.id}" title="Edit">✎</button>
             <button class="del" data-del="${entry.id}" data-fishname="${escapeHtml(displayName)}" title="Delete">✕</button>
           </div>
@@ -2626,6 +2744,7 @@ function renderLog() {
           ${entry.notes ? `<div class="notes">"${escapeHtml(entry.notes)}"</div>` : ''}
         </div>
         <div class="actions">
+          <button class="fav ${entry.fav ? 'on' : ''}" data-fav="${entry.id}" title="Favorite" aria-label="Favorite">${entry.fav ? '♥' : '♡'}</button>
           <button class="edit" data-edit="${entry.id}" title="Edit">✎</button>
           <button class="del" data-del="${entry.id}" data-fishname="${escapeHtml(f.name)}" title="Delete">✕</button>
         </div>
@@ -3566,6 +3685,20 @@ function bindEvents() {
   });
   document.querySelectorAll('[data-action="open-filter"]').forEach(el => {
     el.addEventListener('click', openFilterSheet);
+  });
+  document.querySelectorAll('[data-fav]').forEach(el => {
+    el.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const id = el.dataset.fav;
+      const idx = log.findIndex(x => x.id === id);
+      if (idx < 0) return;
+      const on = !log[idx].fav;
+      log[idx] = { ...log[idx], fav: on };
+      if (!on) delete log[idx].fav;
+      el.classList.toggle('on', on);
+      el.textContent = on ? '♥' : '♡';
+      await saveLog();
+    });
   });
   document.querySelectorAll('[data-edit]').forEach(el => {
     el.addEventListener('click', (ev) => {
